@@ -16,10 +16,7 @@
     "url": "https://github.com/voxslopuli/teamdynamix-mcp/issues"
   },
   "license": "MIT",
-  "author": {
-    "name": "Daniel Sieradski",
-    "email": "daniel@self.agency"
-  },
+  "author": "Grand Slopulissimo <slopulissimo@voxslopuli.org>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/voxslopuli/teamdynamix-mcp.git"
