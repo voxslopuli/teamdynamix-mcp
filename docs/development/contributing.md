@@ -12,7 +12,7 @@ Contributions are welcome. Please follow the guidelines below to keep the codeba
 ## Setup
 
 ```bash
-git clone https://github.com/selfagency/teamdynamix-mcp.git
+git clone https://github.com/voxslopuli/teamdynamix-mcp.git
 cd teamdynamix-mcp
 pnpm install
 pnpm build
@@ -111,7 +111,7 @@ PRs that fail CI, introduce `any`, skip tests, or bypass the formatter will not 
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/selfagency/teamdynamix-mcp/issues). Include:
+Use [GitHub Issues](https://github.com/voxslopuli/teamdynamix-mcp/issues). Include:
 
 - Node.js version (`node --version`)
 - OS and architecture

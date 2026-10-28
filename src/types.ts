@@ -86,4 +86,4 @@ export interface TeamDynamixRequestOptions {
 }
 
 // SDK client types
-export type { TeamDynamixSdk } from '@selfagency/teamdynamix-ts';
+export type { TeamDynamixSdk } from '@voxslopuli/teamdynamix-ts';

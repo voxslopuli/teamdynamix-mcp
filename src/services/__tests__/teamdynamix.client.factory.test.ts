@@ -4,11 +4,13 @@ import {
   assertWriteToolsEnabled,
   assertDeleteToolsEnabled,
 } from '../teamdynamix/client.factory.js';
+import { createMcpSdkClient } from '../../client/sdk-client.factory.js';
 import type { TeamDynamixConfig } from '../../types.js';
 
 // Mock the SDK client factory
 vi.mock('../../client/sdk-client.factory.js', () => ({
   createMcpSdkClient: vi.fn().mockResolvedValue({
+    POST: vi.fn().mockResolvedValue({ data: [{ ID: 7 }], error: undefined }),
     discovery: {
       authGetuser: vi.fn().mockResolvedValue({ FullName: 'Demo User' }),
       applications: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Test App' }]),
@@ -149,6 +151,30 @@ describe('UnifiedTeamDynamixClient', () => {
     it('searchTickets', async () => {
       const tickets = await client.searchTickets(42, { Keyword: 'test' });
       expect(Array.isArray(tickets)).toBe(true);
+    });
+
+    it('searchTickets sends the search body to the search endpoint (issue #16)', async () => {
+      const sdk = await createMcpSdkClient(baseConfig);
+      const postMock = sdk.POST as unknown as ReturnType<typeof vi.fn>;
+      postMock.mockResolvedValue({ data: [{ ID: 7 }], error: undefined });
+
+      const tickets = await client.searchTickets(42, {
+        MaxResults: 50,
+        ResponsibleGroupIDs: [20618],
+        StatusIDs: [128712],
+      });
+      expect(postMock).toHaveBeenCalledWith(
+        '/api/{appId}/tickets/search',
+        expect.objectContaining({
+          params: { path: { appId: 42 } },
+          body: expect.objectContaining({
+            MaxResults: 50,
+            ResponsibilityGroupIDs: [20618],
+            StatusIDs: [128712],
+          }),
+        }),
+      );
+      expect(tickets).toEqual([{ ID: 7 }]);
     });
 
     it('listTicketTypes', async () => {

@@ -1,4 +1,4 @@
-import { loginWithPassword, loginWithServiceAccount, createTokenProviderFromJWT } from '@selfagency/teamdynamix-ts';
+import { loginWithPassword, loginWithServiceAccount, createTokenProviderFromJWT } from '@voxslopuli/teamdynamix-ts';
 import type { TeamDynamixConfig } from '../types.js';
 
 /**

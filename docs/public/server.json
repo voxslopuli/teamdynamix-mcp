@@ -1,13 +1,13 @@
 {
   "$schema": "https://modelcontextprotocol.io/schemas/server.json",
-  "name": "io.github.selfagency/teamdynamix-mcp",
+  "name": "io.github.voxslopuli/teamdynamix-mcp",
   "description": "A production-ready TypeScript MCP server for TeamDynamix ITSM, providing tools for tickets, knowledge base, assets, configuration items, services, projects, people, and more.",
-  "repository": "https://github.com/selfagency/teamdynamix-mcp",
+  "repository": "https://github.com/voxslopuli/teamdynamix-mcp",
   "version": "0.1.1",
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "@selfagency/teamdynamix-mcp",
+      "identifier": "@voxslopuli/teamdynamix-mcp",
       "version": "0.1.1",
       "transport": {
         "type": "stdio"

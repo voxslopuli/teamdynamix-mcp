@@ -1,12 +1,12 @@
 {
   "serverInfo": {
-    "name": "io.github.selfagency/teamdynamix-mcp",
+    "name": "io.github.voxslopuli/teamdynamix-mcp",
     "version": "0.1.1"
   },
   "transports": [
     {
       "type": "stdio",
-      "package": "@selfagency/teamdynamix-mcp",
+      "package": "@voxslopuli/teamdynamix-mcp",
       "registry": "npm"
     }
   ],

@@ -1,6 +1,6 @@
 # 🎟️ TeamDynamix MCP Server (unofficial)
 
-![NPM Version](https://img.shields.io/npm/v/@selfagency/teamdynamix-mcp) [![CI](https://github.com/selfagency/teamdynamix-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/selfagency/teamdynamix-mcp/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/selfagency/teamdynamix-mcp/graph/badge.svg?token=kYslnQkMFy)](https://codecov.io/gh/selfagency/teamdynamix-mcp)
+![NPM Version](https://img.shields.io/npm/v/@voxslopuli/teamdynamix-mcp) [![CI](https://github.com/voxslopuli/teamdynamix-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/voxslopuli/teamdynamix-mcp/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/voxslopuli/teamdynamix-mcp/graph/badge.svg?token=kYslnQkMFy)](https://codecov.io/gh/voxslopuli/teamdynamix-mcp)
 
 A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that exposes [TeamDynamix](https://www.teamdynamix.com/) ITSM capabilities as agent-callable tools. Designed for AI agents and MCP clients that need structured, safety-gated access to TeamDynamix operations.
 
@@ -20,11 +20,11 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 
 ## MCP Registry
 
-This server is published to the [MCP Registry](https://modelcontextprotocol.io/) as `io.github.selfagency/teamdynamix-mcp`.
+This server is published to the [MCP Registry](https://modelcontextprotocol.io/) as `io.github.voxslopuli/teamdynamix-mcp`.
 
-- **Registry name**: `io.github.selfagency/teamdynamix-mcp`
-- **Install via registry**: `mcp-install io.github.selfagency/teamdynamix-mcp` (when available)
-- **Manual install**: Use npm package `@selfagency/teamdynamix-mcp` as shown below
+- **Registry name**: `io.github.voxslopuli/teamdynamix-mcp`
+- **Install via registry**: `mcp-install io.github.voxslopuli/teamdynamix-mcp` (when available)
+- **Manual install**: Use npm package `@voxslopuli/teamdynamix-mcp` as shown below
 
 ## Quick start (developer setup)
 
@@ -35,7 +35,7 @@ command examples.
 
 ```sh
 # 1. Clone the repository
-git clone https://github.com/selfagency/teamdynamix-mcp.git
+git clone https://github.com/voxslopuli/teamdynamix-mcp.git
 cd teamdynamix-mcp
 
 # 2. Install dependencies
@@ -78,7 +78,7 @@ For admin mode, use `TEAMDYNAMIX_BEID` and `TEAMDYNAMIX_WEB_SERVICES_KEY` instea
     "teamdynamix": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@selfagency/teamdynamix-mcp"],
+      "args": ["-y", "@voxslopuli/teamdynamix-mcp"],
       "env": {
         "TEAMDYNAMIX_BASE_URL": "https://your-tenant.teamdynamix.com/TDWebApi",
         "TEAMDYNAMIX_AUTH_MODE": "standard",
@@ -97,7 +97,7 @@ For admin mode, use `TEAMDYNAMIX_BEID` and `TEAMDYNAMIX_WEB_SERVICES_KEY` instea
   "mcpServers": {
     "teamdynamix": {
       "command": "npx",
-      "args": ["-y", "@selfagency/teamdynamix-mcp"],
+      "args": ["-y", "@voxslopuli/teamdynamix-mcp"],
       "env": {
         "TEAMDYNAMIX_BASE_URL": "https://your-tenant.teamdynamix.com/TDWebApi",
         "TEAMDYNAMIX_AUTH_MODE": "standard",
@@ -118,7 +118,7 @@ pnpm build   # outputs to dist/
 ```json
 {
   "command": "npx",
-  "args": ["-y", "@selfagency/teamdynamix-mcp"]
+  "args": ["-y", "@voxslopuli/teamdynamix-mcp"]
 }
 ```
 

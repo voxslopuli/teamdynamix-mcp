@@ -1,22 +1,22 @@
 {
   "linkset": [
     {
-      "anchor": "https://github.com/selfagency/teamdynamix-mcp",
+      "anchor": "https://github.com/voxslopuli/teamdynamix-mcp",
       "service-desc": [
         {
-          "href": "https://raw.githubusercontent.com/selfagency/teamdynamix-mcp/main/docs/public/server.json",
+          "href": "https://raw.githubusercontent.com/voxslopuli/teamdynamix-mcp/main/docs/public/server.json",
           "type": "application/json"
         }
       ],
       "service-doc": [
         {
-          "href": "https://github.com/selfagency/teamdynamix-mcp#readme",
+          "href": "https://github.com/voxslopuli/teamdynamix-mcp#readme",
           "type": "text/html"
         }
       ],
       "status": [
         {
-          "href": "https://github.com/selfagency/teamdynamix-mcp/actions",
+          "href": "https://github.com/voxslopuli/teamdynamix-mcp/actions",
           "type": "text/html"
         }
       ]

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitepress';
 
-const SITE_URL = 'https://github.com/selfagency/teamdynamix-mcp';
+const SITE_URL = 'https://teamdynamix-mcp.voxslopuli.org';
 
 export default defineConfig({
   title: 'TeamDynamix MCP Server',
@@ -39,8 +39,8 @@ export default defineConfig({
       {
         text: 'Repository',
         items: [
-          { text: 'GitHub', link: 'https://github.com/selfagency/teamdynamix-mcp' },
-          { text: 'Changelog', link: 'https://github.com/selfagency/teamdynamix-mcp/releases' },
+          { text: 'GitHub', link: 'https://github.com/voxslopuli/teamdynamix-mcp' },
+          { text: 'Changelog', link: 'https://github.com/voxslopuli/teamdynamix-mcp/releases' },
           { text: 'Contributing', link: '/development/contributing' },
         ],
       },
@@ -109,7 +109,7 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/selfagency/teamdynamix-mcp' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/voxslopuli/teamdynamix-mcp' }],
 
     footer: {
       message: 'Released under the MIT License.',
@@ -121,7 +121,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/selfagency/teamdynamix-mcp/edit/main/docs/:path',
+      pattern: 'https://github.com/voxslopuli/teamdynamix-mcp/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
   },

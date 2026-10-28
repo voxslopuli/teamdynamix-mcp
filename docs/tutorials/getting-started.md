@@ -22,7 +22,7 @@ If you want to run from source as a contributor, use the development guide:
 Add a TeamDynamix server entry to your MCP client config:
 
 - command: `npx`
-- args: `-y`, `@selfagency/teamdynamix-mcp`
+- args: `-y`, `@voxslopuli/teamdynamix-mcp`
 - env:
   - `TEAMDYNAMIX_BASE_URL`
   - `TEAMDYNAMIX_AUTH_MODE`

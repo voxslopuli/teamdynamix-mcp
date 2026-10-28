@@ -20,8 +20,8 @@ Confirm `docs/public/server.json` exists and has correct values:
 
 ```bash
 # Verify mcpName matches package.json
-jq '.name' docs/public/server.json # Should be: io.github.selfagency/teamdynamix-mcp
-jq '.packages[0].identifier' docs/public/server.json # Should be: @selfagency/teamdynamix-mcp
+jq '.name' docs/public/server.json # Should be: io.github.voxslopuli/teamdynamix-mcp
+jq '.packages[0].identifier' docs/public/server.json # Should be: @voxslopuli/teamdynamix-mcp
 
 # Verify version alignment
 jq '.version' docs/public/server.json # Should match package.json version
@@ -32,7 +32,7 @@ Expected structure:
 
 - `name` matches `package.json.mcpName`
 - `version` matches `package.json.version`
-- `packages[0].identifier` is `@selfagency/teamdynamix-mcp`
+- `packages[0].identifier` is `@voxslopuli/teamdynamix-mcp`
 - `environmentVariables` includes all required TeamDynamix env vars
 
 ## Step 3: Publish server.json
@@ -49,14 +49,14 @@ Expected output:
 ```text
 ✓ Validated server.json
 ✓ Domain ownership verified: self.agency
-✓ Published io.github.selfagency/teamdynamix-mcp v0.2.0
+✓ Published io.github.voxslopuli/teamdynamix-mcp v0.2.0
 ```
 
 ## Step 4: Verify publication
 
 Confirm:
 
-- Server name: `io.github.selfagency/teamdynamix-mcp`
+- Server name: `io.github.voxslopuli/teamdynamix-mcp`
 - Version: Matches your published version
 - Environment variables documented correctly
 - Package listing shows npm transport
@@ -65,14 +65,14 @@ Check that your server appears in the MCP Registry:
 
 ```bash
 # Search for your server (when CLI search is available)
-mcp-publisher search io.github.selfagency/teamdynamix-mcp
+mcp-publisher search io.github.voxslopuli/teamdynamix-mcp
 
 # Or verify via web UI at modelcontextprotocol.io
 ```
 
 Confirm:
 
-- Server name: `io.github.selfagency/teamdynamix-mcp`
+- Server name: `io.github.voxslopuli/teamdynamix-mcp`
 - Version: Matches your published version
 - Environment variables documented correctly
 - Package listing shows npm transport

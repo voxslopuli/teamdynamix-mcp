@@ -3,6 +3,26 @@ import { getTeamDynamixConfig } from '../../config.js';
 import type { TeamDynamixConfig } from '../../types.js';
 
 /**
+ * Maps MCP-facing search filter names to the TeamDynamix Web API field names.
+ * The API's ticket search body uses `ResponsibilityGroupIDs`; the MCP schema exposes
+ * `ResponsibleGroupIDs`. All other fields pass through unchanged (issue #16).
+ */
+const TICKET_SEARCH_FIELD_MAP: Record<string, string> = {
+  ResponsibleGroupIDs: 'ResponsibilityGroupIDs',
+  ResponsibleGroupID: 'ResponsibilityGroupID',
+  ResponsibleGroups: 'ResponsibilityGroupIDs',
+};
+
+function mapTicketSearchBody(body: Record<string, unknown>): Record<string, unknown> {
+  const mapped: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (value === undefined) continue;
+    mapped[TICKET_SEARCH_FIELD_MAP[key] ?? key] = value;
+  }
+  return mapped;
+}
+
+/**
  * SDK-backed TeamDynamix client.
  */
 export class UnifiedTeamDynamixClient {
@@ -31,10 +51,18 @@ export class UnifiedTeamDynamixClient {
   getTicket(appId: number, ticketId: number): Promise<unknown> {
     return this.sdk().then(s => s.tickets.appIdTicketsId({ params: { path: { appId, id: ticketId } } }));
   }
-  searchTickets(appId: number, _body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.tickets.appIdTicketsFeed({ params: { path: { appId } } })) as Promise<
-      readonly unknown[]
-    >;
+  searchTickets(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
+    return this.sdk().then(async s => {
+      // The bundled OpenAPI spec omits the search request body; the endpoint accepts one at runtime.
+      const { data, error } = await s.POST('/api/{appId}/tickets/search', {
+        params: { path: { appId } },
+        body: mapTicketSearchBody(body),
+      } as never);
+      if (error) {
+        throw new Error(`Ticket search failed: ${JSON.stringify(error)}`);
+      }
+      return Array.isArray(data) ? data : [];
+    });
   }
   listTicketTypes(appId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s => s.tickets.appIdTicketsTypes({ params: { path: { appId } } })) as Promise<

@@ -1,5 +1,5 @@
 {
-  "name": "@selfagency/teamdynamix-mcp",
+  "name": "@voxslopuli/teamdynamix-mcp",
   "version": "0.3.2",
   "private": false,
   "description": "A production-ready TypeScript MCP server for TeamDynamix",
@@ -11,9 +11,9 @@
     "teamdynamix",
     "typescript"
   ],
-  "homepage": "https://github.com/selfagency/teamdynamix-mcp",
+  "homepage": "https://github.com/voxslopuli/teamdynamix-mcp",
   "bugs": {
-    "url": "https://github.com/selfagency/teamdynamix-mcp/issues"
+    "url": "https://github.com/voxslopuli/teamdynamix-mcp/issues"
   },
   "license": "MIT",
   "author": {
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/selfagency/teamdynamix-mcp.git"
+    "url": "git+https://github.com/voxslopuli/teamdynamix-mcp.git"
   },
   "bin": "dist/index.js",
   "type": "module",
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@selfagency/teamdynamix-ts": "^0.1.4",
+    "@voxslopuli/teamdynamix-ts": "^0.2.0",
     "tablemark": "^4.1.0",
     "zod": "^4.6.2"
   },

@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createMcpSdkClient } from '../sdk-client.factory.js';
+import { loginWithPassword, loginWithServiceAccount } from '@voxslopuli/teamdynamix-ts';
 import type { TeamDynamixConfig } from '../../types.js';
 
 // Mock the SDK so we don't need real credentials
-vi.mock('@selfagency/teamdynamix-ts', () => {
+vi.mock('@voxslopuli/teamdynamix-ts', () => {
   const mockClient = {
     discovery: {
       authGetuser: vi.fn().mockResolvedValue({ FullName: 'Demo User' }),
@@ -110,6 +111,27 @@ const baseConfig: TeamDynamixConfig = {
 };
 
 describe('SDK Client Factory', () => {
+  describe('auth wiring (issue #15)', () => {
+    it('passes the full baseUrl (including path prefix) to the password login', async () => {
+      await createMcpSdkClient(baseConfig);
+      expect(loginWithPassword).toHaveBeenCalledWith(
+        expect.objectContaining({ baseUrl: 'https://example.teamdynamix.com/TDWebApi' }),
+      );
+    });
+
+    it('passes the full baseUrl to the service account login', async () => {
+      await createMcpSdkClient({
+        ...baseConfig,
+        authMode: 'admin',
+        beid: 'beid',
+        webServicesKey: 'key',
+      });
+      expect(loginWithServiceAccount).toHaveBeenCalledWith(
+        expect.objectContaining({ baseUrl: 'https://example.teamdynamix.com/TDWebApi' }),
+      );
+    });
+  });
+
   describe('client creation', () => {
     it('should create a client with standard auth', async () => {
       const client = await createMcpSdkClient(baseConfig);

@@ -1,5 +1,5 @@
 {
-  "resource": "https://github.com/selfagency/teamdynamix-mcp",
+  "resource": "https://github.com/voxslopuli/teamdynamix-mcp",
   "authorization_servers": [
     "https://auth.self.agency"
   ],

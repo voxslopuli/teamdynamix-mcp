@@ -14,6 +14,6 @@ export type {
   SdkDomainName,
   ReportPage,
   BulkResult,
-} from '@selfagency/teamdynamix-ts';
+} from '@voxslopuli/teamdynamix-ts';
 
-export { projectFields, previewEntity, runTicketReport, bulkAddUsersToGroup } from '@selfagency/teamdynamix-ts';
+export { projectFields, previewEntity, runTicketReport, bulkAddUsersToGroup } from '@voxslopuli/teamdynamix-ts';
