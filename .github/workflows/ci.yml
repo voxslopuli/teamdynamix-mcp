@@ -32,9 +32,10 @@ jobs:
           fetch-depth: 0
 
       - name: Secret scanning (gitleaks)
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # gitleaks-action requires a paid license for organizations; run the OSS binary directly
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --redact --exit-code 1
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
