@@ -10,6 +10,7 @@ import type { TeamDynamixConfig } from '../../types.js';
 // Mock the SDK client factory
 vi.mock('../../client/sdk-client.factory.js', () => ({
   createMcpSdkClient: vi.fn().mockResolvedValue({
+    GET: vi.fn().mockResolvedValue({ data: null, error: undefined }),
     POST: vi.fn().mockResolvedValue({ data: [{ ID: 7 }], error: undefined }),
     discovery: {
       authGetuser: vi.fn().mockResolvedValue({ FullName: 'Demo User' }),
@@ -148,6 +149,67 @@ describe('UnifiedTeamDynamixClient', () => {
       expect(ticket).toHaveProperty('Title', 'Test Ticket');
     });
 
+    describe('getTicketFeed inlines replies (issue #17)', () => {
+      it('attaches Replies for entries with RepliesCount > 0', async () => {
+        const sdk = await createMcpSdkClient(baseConfig);
+        // @ts-expect-error mocked surface
+        sdk.tickets.appIdTicketsIdFeed.mockResolvedValue([
+          { ID: 100, RepliesCount: 2, Replies: [] },
+          { ID: 200, RepliesCount: 0, Replies: [] },
+          { ID: 300, RepliesCount: 1, Replies: null },
+        ]);
+        // @ts-expect-error mocked surface
+        sdk.GET.mockImplementation(async (_path: string, init: { params: { path: { id: number } } }) => {
+          const replies: Record<number, unknown[]> = {
+            100: [{ ID: 1 }, { ID: 2 }],
+            300: [{ ID: 9 }],
+          };
+          return { data: { ID: init.params.path.id, Replies: replies[init.params.path.id] ?? [] }, error: undefined };
+        });
+
+        const feed = await client.getTicketFeed(42, 9001);
+        expect(feed[0]).toMatchObject({ ID: 100, RepliesCount: 2, Replies: [{ ID: 1 }, { ID: 2 }] });
+        expect(feed[1]).toMatchObject({ ID: 200 });
+        expect(feed[2]).toMatchObject({ ID: 300, Replies: [{ ID: 9 }] });
+      });
+
+      it('caps per-entry fetches with repliesEntryLimit', async () => {
+        const sdk = await createMcpSdkClient(baseConfig);
+        // @ts-expect-error mocked surface
+        sdk.tickets.appIdTicketsIdFeed.mockResolvedValue([
+          { ID: 100, RepliesCount: 1, Replies: [] },
+          { ID: 200, RepliesCount: 1, Replies: [] },
+        ]);
+        const fetched: number[] = [];
+        // @ts-expect-error mocked surface
+        sdk.GET.mockImplementation(async (_p: string, i: { params: { path: { id: number } } }) => {
+          fetched.push(i.params.path.id);
+          return { data: { ID: i.params.path.id, Replies: [{ ID: 1 }] }, error: undefined };
+        });
+
+        const feed = (await client.getTicketFeed(42, 9001, { repliesEntryLimit: 1 })) as Array<{
+          ID: number;
+          Replies: unknown[];
+        }>;
+        expect(fetched).toEqual([100]);
+        expect(feed[0].Replies).toHaveLength(1);
+        expect(feed[1].Replies).toEqual([]);
+      });
+
+      it('throws a descriptive error on rate-limit responses', async () => {
+        const sdk = await createMcpSdkClient(baseConfig);
+        // @ts-expect-error mocked surface
+        sdk.tickets.appIdTicketsIdFeed.mockResolvedValue([{ ID: 100, RepliesCount: 1, Replies: [] }]);
+        // @ts-expect-error mocked surface
+        sdk.GET.mockResolvedValue({
+          data: null,
+          error: 'This can only be requested 60 times every 60 seconds.',
+        });
+
+        await expect(client.getTicketFeed(42, 9001)).rejects.toThrow(/60 times every 60 seconds/);
+      });
+    });
+
     it('searchTickets', async () => {
       const tickets = await client.searchTickets(42, { Keyword: 'test' });
       expect(Array.isArray(tickets)).toBe(true);
@@ -203,6 +265,9 @@ describe('UnifiedTeamDynamixClient', () => {
     });
 
     it('getTicketFeed', async () => {
+      const sdk = await createMcpSdkClient(baseConfig);
+      // @ts-expect-error mocked surface
+      sdk.tickets.appIdTicketsIdFeed.mockResolvedValue([{ ID: 1, Body: 'Comment' }]);
       const feed = await client.getTicketFeed(42, 1);
       expect(Array.isArray(feed)).toBe(true);
     });
