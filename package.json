@@ -1,6 +1,6 @@
 {
   "name": "@voxslopuli/teamdynamix-mcp",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": false,
   "description": "A production-ready TypeScript MCP server for TeamDynamix",
   "keywords": [
