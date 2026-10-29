@@ -89,10 +89,47 @@ export class UnifiedTeamDynamixClient {
       readonly unknown[]
     >;
   }
-  getTicketFeed(appId: number, ticketId: number): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.tickets.appIdTicketsIdFeed({ params: { path: { appId, id: ticketId } } })) as Promise<
-      readonly unknown[]
-    >;
+  /**
+   * Upper bound on feed entries we'll fetch replies for. The TDX API allows 60
+   * requests/60s; the feed call itself plus one fetch per entry must stay under it.
+   */
+  static readonly DEFAULT_REPLIES_ENTRY_LIMIT = 10;
+
+  async getTicketFeed(
+    appId: number,
+    ticketId: number,
+    opts: { repliesEntryLimit?: number } = {},
+  ): Promise<readonly unknown[]> {
+    const s = await this.sdk();
+    const feed = (await s.tickets.appIdTicketsIdFeed({ params: { path: { appId, id: ticketId } } })) as unknown[];
+    const entries = Array.isArray(feed) ? feed : [];
+
+    // The ticket feed endpoint never populates `Replies` even when `RepliesCount > 0` (issue #17);
+    // the only read route is GET /api/feed/{id}. Fetch replies for the first N entries that have any.
+    const limit = opts.repliesEntryLimit ?? UnifiedTeamDynamixClient.DEFAULT_REPLIES_ENTRY_LIMIT;
+    const missing = entries.filter(
+      e =>
+        typeof (e as { RepliesCount?: unknown }).RepliesCount === 'number' &&
+        (e as { RepliesCount: number }).RepliesCount > 0 &&
+        (!Array.isArray((e as { Replies?: unknown }).Replies) || (e as { Replies: unknown[] }).Replies.length === 0) &&
+        typeof (e as { ID?: unknown }).ID !== 'undefined',
+    );
+    for (const entry of missing.slice(0, limit)) {
+      const target = entry as { ID: number; Replies?: unknown[] };
+      // The bundled OpenAPI spec omits this operation's response shape; it returns the entry with replies.
+      const { data, error } = (await s.GET('/api/feed/{id}', {
+        params: { path: { id: target.ID } },
+      } as never)) as { data: { Replies?: unknown[] } | null; error: unknown };
+      if (error) {
+        const detail = typeof error === 'string' ? error : JSON.stringify(error);
+        throw new Error(`Failed to fetch replies for feed entry ${target.ID} (GET /api/feed/{id}): ${detail}`);
+      }
+      if (data && Array.isArray(data.Replies)) {
+        target.Replies = data.Replies;
+      }
+    }
+
+    return entries;
   }
 
   //
