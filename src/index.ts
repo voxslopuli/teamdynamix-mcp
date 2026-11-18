@@ -6,6 +6,7 @@ import { SERVER_NAME, SERVER_VERSION } from './constants.js';
 import { registerTeamDynamixResources } from './resources/teamdynamix.resources.js';
 import { redactTeamDynamixConfig } from './services/teamdynamix/core.service.js';
 import { registerTeamDynamixDomainGatewayTools } from './tools/teamdynamix.domain-gateways.tools.js';
+import { registerTeamDynamixWatchTools } from './tools/teamdynamix.watch.tools.js';
 
 const server = new McpServer({
   name: SERVER_NAME_OVERRIDE ?? SERVER_NAME,
@@ -13,6 +14,7 @@ const server = new McpServer({
 });
 
 registerTeamDynamixDomainGatewayTools(server);
+registerTeamDynamixWatchTools(server);
 registerTeamDynamixResources(server);
 
 async function main(): Promise<void> {

@@ -158,6 +158,30 @@ Each gateway tool accepts:
 
 All write/mutating actions require `TEAMDYNAMIX_ENABLE_WRITE_TOOLS=true`.
 
+## Workspace watch tools
+
+A local, hash-diff ledger of tickets the agent manages (issue #19), plus local-only notes —
+the server's own memory. Strictly read-only toward TeamDynamix: none of these tools write to
+the API; drafts and sends stay human-owned.
+
+| Tool                         | Behavior                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `teamdynamix_watch_check`    | Diff pass: queue sweep per app, deep-fetch only changed tickets, classified deltas (status, new-entry, hidden-reply, ownership, sla, hold-window) |
+| `teamdynamix_watch_status`   | Ledger summary (counts, ball-in-court, oldest freshness). No TDX calls.                                                                           |
+| `teamdynamix_watch_register` | Add/update a ledger row (lane, ball-in-court override, next action). Never calls TDX.                                                             |
+| `teamdynamix_watch_archive`  | Move a row to the archive; notes preserved. Never calls TDX.                                                                                      |
+| `teamdynamix_watch_notes`    | Local notes CRUD on ledgered tickets (`op: add \| update \| delete \| list`). Never written to TDX.                                               |
+
+- Ledger file: `$TDX_WATCH_LEDGER` (default `./.tdx-watch-ledger.json`). Atomic writes;
+  corrupt files fail closed rather than being silently recreated.
+- Ball-in-court (`us`/`them`) is auto-inferred from the last feed entry's author; a manual
+  `ball` passed to `watch_register` wins permanently.
+- `TEAMDYNAMIX_US_UIDS` (comma-separated) defines "us"; `TEAMDYNAMIX_AUTO_OBSERVE=true`
+  enables bounded auto-observations on deep reads (default off).
+- Note text is capped at 4000 chars; report bodies are length-capped and redacted
+  (emails, phone-like runs).
+- Scheduled use: run `watch_check` ~2×/day (e.g. `opencode run` with a watch-check prompt).
+
 ## Safety defaults
 
 | Flag                              | Default | Effect when `true`                                        |
