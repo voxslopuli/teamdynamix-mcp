@@ -246,3 +246,5 @@ results.sarif
 
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
+
+.tdx-watch-ledger.json

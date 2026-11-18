@@ -27,15 +27,17 @@ async function main() {
     type: 'module',
     main: './index.js',
     types: './index.d.ts',
-    files: ['./index.js', './index.js.map', './index.d.ts'],
+    files: ['./index.js', './index.js.map', './index.d.ts', './sweep.js', './sweep.js.map', './sweep.d.ts'],
     bin: {
       [binName]: './index.js',
+      'tdx-watch-sweep': './sweep.js',
     },
     exports: {
       '.': {
         import: './index.js',
         types: './index.d.ts',
       },
+      './sweep': './sweep.js',
     },
     dependencies: JSON.parse(raw).dependencies,
   };

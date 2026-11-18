@@ -1,3 +1,10 @@
+## v0.5.1 - 2026-11-18
+
+- fix: published package was missing code-split chunk files (new `tdx-watch-sweep` CLI entry caused tsup splitting); builds are now single-file per entry and the tarball is self-contained (#20)
+- feat: `tdx-watch-sweep` bin declared in the dist package; gitignore local `.tdx-watch-ledger.json`
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.0...v0.5.1
+
 ## v0.5.0 - 2026-11-18
 
 - fix: `search_users` routed through `POST /api/people/search` with full `UserSearch` passthrough; was a guaranteed-failing GET-with-body (#18)
