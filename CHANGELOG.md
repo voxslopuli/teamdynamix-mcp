@@ -1,3 +1,14 @@
+## v0.5.0 - 2026-11-18
+
+- fix: `search_users` routed through `POST /api/people/search` with full `UserSearch` passthrough; was a guaranteed-failing GET-with-body (#18)
+- fix: `search_groups` now passes sanitized `GroupSearch` filters instead of `{}`
+- fix: `search_kb_articles` now calls `POST /api/{appId}/knowledgebase/search` (behavior change: real server-side search results)
+- feat: workspace watch ledger + `tdx_watch_*` tools (`check`, `status`, `sweep`, `triage`, `register`, `archive`, `notes`) — hash-diff ledger with hidden-reply detection, ball-in-court inference, local-only notes; strictly read-only toward TDX (#19)
+- feat: `TEAMDYNAMIX_TICKET_GROUP_IDS` — optional global client-side restriction of ticket searches to a team/group
+- feat: scheduled sweep support — `tdx-watch-sweep` CLI, in-session timer (`TEAMDYNAMIX_WATCH_SWEEP_SECS`), launchd template + background triage prompt (`scripts/`)
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.4.2...v0.5.0
+
 ## v0.4.2 - 2026-10-29
 
 **Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.4.1...v0.4.2
