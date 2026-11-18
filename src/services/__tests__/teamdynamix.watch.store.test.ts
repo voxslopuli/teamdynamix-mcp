@@ -3,7 +3,7 @@ import { promises as fs } from 'node:fs';
 import { loadLedger, saveLedger, defaultLedgerPath, LedgerCorruptError } from '../teamdynamix/watch.store.js';
 import type { WatchLedger } from '../teamdynamix/watch.store.js';
 
-const emptyLedger: WatchLedger = { active: [], archived: [], sweepMeta: {} };
+const emptyLedger: WatchLedger = { active: [], archived: [], pendingTriage: [], sweepMeta: {} };
 
 function rowWithMemory() {
   return {
@@ -55,11 +55,12 @@ describe('watch ledger store', () => {
     const ledger: WatchLedger = {
       active: [rowWithMemory()],
       archived: [],
+      pendingTriage: [],
       sweepMeta: { lastSweep: '2026-11-18T00:00:00Z' },
     };
     await saveLedger(file, ledger);
     const loaded = await loadLedger(file);
-    expect(loaded).toEqual(ledger);
+    expect(loaded).toEqual({ ...ledger, version: 1 });
     expect(loaded.active[0]?.memory.notes).toHaveLength(1);
     expect(loaded.active[0]?.memory.observations).toHaveLength(1);
   });

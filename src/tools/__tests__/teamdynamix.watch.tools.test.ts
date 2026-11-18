@@ -28,6 +28,8 @@ describe('teamdynamix watch tools registration', () => {
     expect(names).toEqual([
       'teamdynamix_watch_check',
       'teamdynamix_watch_status',
+      'teamdynamix_watch_sweep',
+      'teamdynamix_watch_triage',
       'teamdynamix_watch_register',
       'teamdynamix_watch_archive',
       'teamdynamix_watch_notes',

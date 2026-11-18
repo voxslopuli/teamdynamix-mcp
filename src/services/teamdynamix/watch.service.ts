@@ -4,10 +4,12 @@ import {
   type WatchLedger,
   type WatchRow,
   type LedgerNote,
+  type PendingTriageItem,
   MAX_NOTE_LENGTH,
   MAX_OBSERVATIONS,
 } from './watch.store.js';
 import type { ReadableClient } from './watch.readonly-client.js';
+import { parseIdListEnv } from './client.factory.js';
 
 /**
  * Diff engine + ledger maintenance for the workspace watch feature (issue #19).
@@ -17,6 +19,10 @@ import type { ReadableClient } from './watch.readonly-client.js';
 const REPORT_MAX_CHARS = 8000;
 const TITLE_MAX_CHARS = 200;
 const US_UIDS_ENV = 'TEAMDYNAMIX_US_UIDS';
+const GROUP_IDS_ENV = 'TEAMDYNAMIX_TICKET_GROUP_IDS';
+const STATUS_IDS_ENV = 'TEAMDYNAMIX_WATCH_STATUS_IDS';
+const DEFAULT_MAX_PENDING = 25;
+const UNASSIGNED_SENTINELS = new Set(['', 'unassigned']);
 
 export interface WatchDelta {
   id: number;
@@ -106,6 +112,135 @@ export class WorkspaceWatchService {
   private usUidsFor(): Set<string> {
     const ledgerUids = this.ledger.sweepMeta.usUids ?? [];
     return new Set([...this.usUids, ...ledgerUids]);
+  }
+
+  private groupIds(): number[] {
+    return this.ledger.sweepMeta.groupIds ?? parseIdListEnv(process.env[GROUP_IDS_ENV]);
+  }
+
+  private statusIds(): number[] {
+    return this.ledger.sweepMeta.statusIds ?? parseIdListEnv(process.env[STATUS_IDS_ENV]);
+  }
+
+  private maxPending(): number {
+    return this.ledger.sweepMeta.maxPending ?? DEFAULT_MAX_PENDING;
+  }
+
+  private pushPending(item: PendingTriageItem): 'queued' | 'deduped' | 'full' {
+    const queue = (this.ledger.pendingTriage ??= []);
+    if (queue.some(p => p.ticketId === item.ticketId)) return 'deduped';
+    if (queue.length >= this.maxPending()) return 'full';
+    queue.push(item);
+    return 'queued';
+  }
+
+  /**
+   * Cheap sweep (stage 1 only): one queue search per app, client-side team
+   * filtering (GroupIDs is not applied server-side on queue searches), stateHash
+   * freshness, new-unassigned detection, and pendingTriage queue maintenance.
+   * Deep fetches / reply expansion are the agent's job via check() / triage.
+   */
+  async sweep(): Promise<{
+    swept: number;
+    changedQueued: number;
+    newUnassignedQueued: number;
+    deduped: number;
+    queueFull: number;
+    unassigned: number[];
+  }> {
+    const result = {
+      swept: 0,
+      changedQueued: 0,
+      newUnassignedQueued: 0,
+      deduped: 0,
+      queueFull: 0,
+      unassigned: [] as number[],
+    };
+    const rows = this.ledger.active;
+    const byApp = new Map<number, WatchRow[]>();
+    for (const row of rows) {
+      const list = byApp.get(row.appId) ?? [];
+      list.push(row);
+      byApp.set(row.appId, list);
+    }
+    // Apps to sweep: ledgered rows plus any configured explicitly, so
+    // new-unassigned discovery works even with an empty ledger.
+    const appIds = new Set([...byApp.keys(), ...parseIdListEnv(process.env['TEAMDYNAMIX_WATCH_APP_IDS'])]);
+    const groupFilter = this.groupIds();
+    const statusFilter = this.statusIds();
+    const queue: PendingTriageItem[] = (this.ledger.pendingTriage ??= []);
+    const ledgeredIds = new Set(rows.map(r => r.id));
+
+    for (const appId of appIds) {
+      const appRows = byApp.get(appId) ?? [];
+      let page: ReadonlyArray<Record<string, unknown>>;
+      try {
+        page = (await this.client.searchTickets(appId, { MaxResults: 500 })) as ReadonlyArray<Record<string, unknown>>;
+      } catch {
+        continue; // sweep is best-effort; check() reports errors properly
+      }
+
+      for (const t of page) {
+        const id = Number(t['ID']);
+        if (!Number.isFinite(id)) continue;
+        // Client-side team restriction
+        if (groupFilter.length > 0) {
+          const gid = Number(t['ResponsibleGroupID']);
+          if (!groupFilter.includes(gid)) continue;
+        }
+        if (statusFilter.length > 0 && !statusFilter.includes(Number(t['StatusID']))) continue;
+        result.swept += 1;
+
+        const row = appRows.find(r => r.id === id);
+        const modified = String(t['ModifiedDate'] ?? '');
+        if (row && row.stateHash.modified !== '' && modified !== row.stateHash.modified) {
+          const outcome = this.pushPending({ ticketId: id, appId, reason: 'changed', at: new Date().toISOString() });
+          if (outcome === 'queued') result.changedQueued += 1;
+          else if (outcome === 'deduped') result.deduped += 1;
+          else result.queueFull += 1;
+        }
+
+        // New unassigned tickets in the team's queues (client-side: ownership
+        // surfaces are unreliable — treat empty or "Unassigned" as unassigned)
+        if (!ledgeredIds.has(id)) {
+          const responsible = String(t['ResponsibleUid'] ?? '').trim();
+          if (UNASSIGNED_SENTINELS.has(responsible.toLowerCase())) {
+            result.unassigned.push(id);
+            const outcome = this.pushPending({
+              ticketId: id,
+              appId,
+              reason: 'new-unassigned',
+              at: new Date().toISOString(),
+              detail: `group=${String(t['ResponsibleGroupName'] ?? '')}`,
+            });
+            if (outcome === 'queued') result.newUnassignedQueued += 1;
+            else if (outcome === 'deduped') result.deduped += 1;
+            else result.queueFull += 1;
+          }
+        }
+      }
+
+      // Refresh hashes for ledgered rows seen on the page (cheap freshness)
+      for (const row of appRows) {
+        const t = page.find(x => Number(x['ID']) === row.id);
+        if (t) row.stateHash.modified = String(t['ModifiedDate'] ?? row.stateHash.modified);
+      }
+    }
+    this.ledger.sweepMeta.lastSweep = new Date().toISOString();
+    await this.persist();
+    return result;
+  }
+
+  pendingTriage(): readonly PendingTriageItem[] {
+    return this.ledger.pendingTriage ?? [];
+  }
+
+  async markTriaged(ticketId: number): Promise<{ removed: boolean }> {
+    const queue = this.ledger.pendingTriage ?? [];
+    const before = queue.length;
+    this.ledger.pendingTriage = queue.filter(p => p.ticketId !== ticketId);
+    await this.persist();
+    return { removed: this.ledger.pendingTriage.length < before };
   }
 
   private async persist(): Promise<void> {

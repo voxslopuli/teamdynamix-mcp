@@ -23,8 +23,45 @@ async function main(): Promise<void> {
     const config = getTeamDynamixConfig();
     console.error(`[teamdynamix-mcp] sanitized config: ${JSON.stringify(redactTeamDynamixConfig(config))}`);
   }
+  startWatchSweepTimer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
+}
+
+/**
+ * Optional in-session watch sweep (cheap stage-1 pass; no LLM, no TDX writes).
+ * Runs only while this server process is alive — always-on scheduling belongs
+ * on the harness side via the `tdx-watch-sweep` CLI (see scripts/). Disabled
+ * unless TEAMDYNAMIX_WATCH_SWEEP_SECS is set to a positive number.
+ */
+function startWatchSweepTimer(): void {
+  const secs = Number(process.env['TEAMDYNAMIX_WATCH_SWEEP_SECS'] ?? 0);
+  if (!Number.isFinite(secs) || secs <= 0) return;
+  const timer = setInterval(() => {
+    import('./services/teamdynamix/watch.store.js')
+      .then(async ({ loadLedger, saveLedger, emptyLedger, defaultLedgerPath, LedgerCorruptError }) => {
+        const { createConfiguredTeamDynamixClient } = await import('./services/teamdynamix/client.service.js');
+        const { WorkspaceWatchService } = await import('./services/teamdynamix/watch.service.js');
+        const ledgerPath = defaultLedgerPath();
+        let ledger;
+        try {
+          ledger = await loadLedger(ledgerPath);
+        } catch (cause) {
+          if (cause instanceof LedgerCorruptError) throw cause;
+          ledger = emptyLedger();
+        }
+        const client = await createConfiguredTeamDynamixClient();
+        const svc = new WorkspaceWatchService(ledger, ledgerPath, client);
+        const result = await svc.sweep();
+        console.error(`[teamdynamix-mcp] watch sweep: ${JSON.stringify(result)}`);
+      })
+      .catch((cause: unknown) => {
+        console.error(
+          `[teamdynamix-mcp] watch sweep failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+        );
+      });
+  }, secs * 1000);
+  timer.unref();
 }
 
 main().catch((error: unknown) => {

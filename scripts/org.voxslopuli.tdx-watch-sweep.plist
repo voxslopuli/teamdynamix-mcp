@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LaunchD template: run the headless watch sweep every 15 minutes, then trigger
+  a harness-side triage run only when the pendingTriage queue is non-empty.
+
+  Install:
+    1. Fill in PATHS below (node binary, repo dist path, log dir, opencode config).
+    2. cp to ~/Library/LaunchAgents/org.voxslopuli.tdx-watch-sweep.plist
+    3. launchctl load ~/Library/LaunchAgents/org.voxslopuli.tdx-watch-sweep.plist
+
+  Required env for the sweep (set in EnvironmentVariables):
+    TEAMDYNAMIX_BASE_URL, TEAMDYNAMIX_USERNAME, TEAMDYNAMIX_PASSWORD (or auth env
+    equivalent), TDX_WATCH_LEDGER, TEAMDYNAMIX_TICKET_GROUP_IDS (optional global
+    team restriction), TEAMDYNAMIX_WATCH_STATUS_IDS (optional, e.g. open statuses),
+    TEAMDYNAMIX_WATCH_APP_IDS (apps to sweep for new-unassigned discovery).
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>org.voxslopuli.tdx-watch-sweep</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-c</string>
+    <string>
+      set -e
+      # PATHS: adjust for your machine
+      NODE_BIN="/opt/homebrew/bin/node"
+      SWEEP_BIN="/path/to/teamdynamix-mcp/dist/sweep.js"
+      LOG_DIR="$HOME/.local/state/tdx-watch"
+      TRIAGE_PROMPT="/path/to/teamdynamix-mcp/scripts/triage-prompt.md"
+      mkdir -p "$LOG_DIR"
+      OUT=$("$NODE_BIN" "$SWEEP_BIN") || { echo "$OUT" >> "$LOG_DIR/sweep.log"; exit 1; }
+      echo "$OUT" >> "$LOG_DIR/sweep.log"
+      PENDING=$(echo "$OUT" | /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin).get("pendingCount", 0))')
+      if [ "$PENDING" -gt 0 ]; then
+        # Harness-side triage: headless agent run, read-only toward TDX.
+        opencode run --file "$TRIAGE_PROMPT" >> "$LOG_DIR/triage.log" 2>&1
+      fi
+    </string>
+  </array>
+
+  <key>StartInterval</key>
+  <integer>900</integer><!-- 15 minutes -->
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/tdx-watch-sweep.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/tdx-watch-sweep.err</string>
+</dict>
+</plist>

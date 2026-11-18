@@ -21,7 +21,10 @@
     "type": "git",
     "url": "git+https://github.com/voxslopuli/teamdynamix-mcp.git"
   },
-  "bin": "dist/index.js",
+  "bin": {
+    "tdx-watch-sweep": "dist/sweep.js",
+    "teamdynamix-mcp": "dist/index.js"
+  },
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

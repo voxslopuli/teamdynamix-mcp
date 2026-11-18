@@ -50,11 +50,26 @@ export interface ArchivedRow extends WatchRow {
   outcome?: string;
 }
 
+export interface PendingTriageItem {
+  ticketId: number;
+  appId: number;
+  reason: 'changed' | 'new-unassigned';
+  at: string;
+  detail?: string;
+}
+
 export interface WatchLedger {
   version?: number;
   active: WatchRow[];
   archived: ArchivedRow[];
-  sweepMeta: { lastSweep?: string; usUids?: string[] };
+  pendingTriage?: PendingTriageItem[];
+  sweepMeta: {
+    lastSweep?: string;
+    usUids?: string[];
+    groupIds?: number[];
+    statusIds?: number[];
+    maxPending?: number;
+  };
 }
 
 export class LedgerCorruptError extends Error {
@@ -85,6 +100,7 @@ export async function loadLedger(filePath: string): Promise<WatchLedger> {
     if (!Array.isArray(parsed.active) || !Array.isArray(parsed.archived)) {
       throw new Error('missing active/archived arrays');
     }
+    parsed.pendingTriage ??= [];
     return parsed;
   } catch (cause) {
     throw new LedgerCorruptError(filePath, cause);
@@ -109,5 +125,5 @@ export async function saveLedger(filePath: string, ledger: WatchLedger): Promise
 }
 
 export function emptyLedger(): WatchLedger {
-  return { active: [], archived: [], sweepMeta: {} };
+  return { active: [], archived: [], pendingTriage: [], sweepMeta: {} };
 }

@@ -182,6 +182,24 @@ the API; drafts and sends stay human-owned.
   (emails, phone-like runs).
 - Scheduled use: run `watch_check` ~2×/day (e.g. `opencode run` with a watch-check prompt).
 
+### Automated sweep + background triage
+
+- `TEAMDYNAMIX_TICKET_GROUP_IDS` (optional, comma-separated): restricts ticket searches
+  **globally** to those groups — applied client-side (the API does not apply `GroupIDs`
+  server-side on queue searches).
+- `TEAMDYNAMIX_WATCH_APP_IDS`, `TEAMDYNAMIX_WATCH_STATUS_IDS`: scope new-unassigned discovery
+  and the sweep's status filter.
+- `teamdynamix_watch_sweep`: cheap sweep (no deep fetches) that maintains a local
+  `pendingTriage` queue: changed ledgered tickets + new unassigned tickets in the team's
+  queues. `teamdynamix_watch_triage` (`op: queue | done`) lists/clears it after the agent
+  has reviewed a ticket and updated its notes.
+- In-session: `TEAMDYNAMIX_WATCH_SWEEP_SECS=900` runs the same sweep on a timer while the
+  MCP server is alive (only during sessions).
+- Off-session: `tdx-watch-sweep` CLI (headless, no LLM) + `scripts/triage-prompt.md` +
+  `scripts/org.voxslopuli.tdx-watch-sweep.plist` (launchd, every 15 min): sweep, then run
+  the harness triage prompt only when the queue is non-empty. Triage is read-only toward
+  TDX — findings go to local notes; a human sends.
+
 ## Safety defaults
 
 | Flag                              | Default | Effect when `true`                                        |

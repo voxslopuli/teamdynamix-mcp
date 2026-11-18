@@ -22,6 +22,13 @@ function mapTicketSearchBody(body: Record<string, unknown>): Record<string, unkn
   return mapped;
 }
 
+export function parseIdListEnv(raw: string | undefined): number[] {
+  return (raw ?? '')
+    .split(/[;,\s]+/)
+    .map(Number)
+    .filter(n => Number.isFinite(n) && n > 0);
+}
+
 /**
  * Schema-derived key allow-lists for search request bodies. Keys not in the live
  * OpenAPI schema (additionalProperties: false) are dropped before the call.
@@ -104,7 +111,16 @@ export class UnifiedTeamDynamixClient {
       if (error) {
         throw new Error(`Ticket search failed: ${JSON.stringify(error)}`);
       }
-      return Array.isArray(data) ? data : [];
+      const results = Array.isArray(data) ? data : [];
+      // Global team restriction (TEAMDYNAMIX_TICKET_GROUP_IDS): GroupIDs is not
+      // applied server-side on queue searches, so filter client-side.
+      const groupFilter = parseIdListEnv(process.env['TEAMDYNAMIX_TICKET_GROUP_IDS']);
+      if (groupFilter.length === 0) return results;
+      return results.filter(item => {
+        if (typeof item !== 'object' || item === null) return false;
+        const gid = Number((item as Record<string, unknown>)['ResponsibleGroupID']);
+        return groupFilter.includes(gid);
+      });
     });
   }
   listTicketTypes(appId: number): Promise<readonly unknown[]> {

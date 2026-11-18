@@ -73,12 +73,58 @@ export function registerTeamDynamixWatchTools(server: McpServer): void {
     `${TEAMDYNAMIX_TOOL_PREFIX}_watch_status`,
     {
       title: 'Watch Status',
-      description: 'Ledger summary (counts, ball-in-court, oldest freshness) without any TDX calls.',
+      description:
+        'Ledger summary (counts, ball-in-court, pending-triage queue, oldest freshness) without any TDX calls.',
       inputSchema: { response_format: TeamDynamixResponseFormatSchema },
       annotations: { ...readOnly, idempotentHint: true, openWorldHint: false },
     },
     async ({ response_format }: { response_format: ResponseFormat }) =>
-      withService(response_format, svc => svc.status()),
+      withService(response_format, async svc => ({
+        ...(await svc.status()),
+        pendingTriage: svc.pendingTriage(),
+      })),
+  );
+
+  server.registerTool(
+    `${TEAMDYNAMIX_TOOL_PREFIX}_watch_sweep`,
+    {
+      title: 'Watch Sweep',
+      description:
+        'Cheap sweep: one queue search per configured app, client-side team restriction (TEAMDYNAMIX_TICKET_GROUP_IDS), ledger freshness, and pending-triage queue maintenance (changed + new-unassigned tickets). No deep fetches.',
+      inputSchema: { response_format: TeamDynamixResponseFormatSchema },
+      annotations: { ...readOnly },
+    },
+    async ({ response_format }: { response_format: ResponseFormat }) =>
+      withService(response_format, svc => svc.sweep()),
+  );
+
+  server.registerTool(
+    `${TEAMDYNAMIX_TOOL_PREFIX}_watch_triage`,
+    {
+      title: 'Watch Triage Queue',
+      description:
+        'Local triage queue (never calls TDX). op=queue lists pending tickets needing background triage; op=done removes a ticket after the agent has reviewed it and updated notes.',
+      inputSchema: {
+        op: z.enum(['queue', 'done']),
+        ticket_id: z.number().int().positive().optional().describe('Required for op=done.'),
+        response_format: TeamDynamixResponseFormatSchema,
+      },
+      annotations: { ...readOnly, openWorldHint: false },
+    },
+    async ({
+      op,
+      ticket_id,
+      response_format,
+    }: {
+      op: 'queue' | 'done';
+      ticket_id?: number;
+      response_format: ResponseFormat;
+    }) =>
+      withService<Record<string, unknown>>(response_format, async svc => {
+        if (op === 'queue') return { pending: svc.pendingTriage() } as Record<string, unknown>;
+        if (ticket_id === undefined) throw new Error('op=done requires ticket_id.');
+        return (await svc.markTriaged(ticket_id)) as Record<string, unknown>;
+      }),
   );
 
   server.registerTool(
