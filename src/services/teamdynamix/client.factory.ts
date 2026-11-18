@@ -23,6 +23,49 @@ function mapTicketSearchBody(body: Record<string, unknown>): Record<string, unkn
 }
 
 /**
+ * Schema-derived key allow-lists for search request bodies. Keys not in the live
+ * OpenAPI schema (additionalProperties: false) are dropped before the call.
+ * Source: https://service.cnyric.org/TDWebApi/swagger/v1/openapi.json (2026-11-18).
+ */
+const USER_SEARCH_KEYS = new Set([
+  'AccountIDs',
+  'AlternateID',
+  'AppName',
+  'AuthenticationUserName',
+  'ExternalID',
+  'IsActive',
+  'IsConfidential',
+  'IsEmployee',
+  'MaxResults',
+  'PhoneNumber',
+  'ReferenceIDs',
+  'SearchText',
+  'SecurityRoleID',
+  'UserName',
+]);
+const GROUP_SEARCH_KEYS = new Set(['AssociatedAppID', 'HasAppID', 'HasSystemAppName', 'IsActive', 'NameLike']);
+const ARTICLE_SEARCH_KEYS = new Set([
+  'AuthorUID',
+  'CategoryID',
+  'CustomAttributes',
+  'IncludeArticleBodies',
+  'IncludeShortcuts',
+  'IsPublic',
+  'IsPublished',
+  'ReturnCount',
+  'SearchText',
+  'Status',
+]);
+
+function sanitizeTo(body: Record<string, unknown>, allowed: Set<string>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body)) {
+    if (allowed.has(key) && value !== undefined) out[key] = value;
+  }
+  return out;
+}
+
+/**
  * SDK-backed TeamDynamix client.
  */
 export class UnifiedTeamDynamixClient {
@@ -177,16 +220,17 @@ export class UnifiedTeamDynamixClient {
     return this.sdk().then(s => s.people.peopleUid({ params: { path: { uid } } }));
   }
   searchUsers(body: Record<string, unknown>): Promise<readonly unknown[]> {
-    const searchText = typeof body['SearchText'] === 'string' ? body['SearchText'] : '';
-    return this.sdk().then(s => s.people.peopleLookup({ body: { SearchText: searchText } })) as Promise<
+    return this.sdk().then(s => s.people.postPeopleSearch({ body: sanitizeTo(body, USER_SEARCH_KEYS) })) as Promise<
       readonly unknown[]
     >;
   }
   getGroup(groupId: number): Promise<unknown> {
     return this.sdk().then(s => s.people.groupsId({ params: { path: { id: groupId } } }));
   }
-  searchGroups(_body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.people.searchGroups({ body: {} })) as Promise<readonly unknown[]>;
+  searchGroups(body: Record<string, unknown>): Promise<readonly unknown[]> {
+    return this.sdk().then(s => s.people.searchGroups({ body: sanitizeTo(body, GROUP_SEARCH_KEYS) })) as Promise<
+      readonly unknown[]
+    >;
   }
   getGroupMembers(groupId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s => s.people.groupsIdMembers({ params: { path: { id: groupId } } })) as Promise<
@@ -201,18 +245,17 @@ export class UnifiedTeamDynamixClient {
     return this.sdk().then(s => s.knowledgeBase.appIdKnowledgebaseId({ params: { path: { appId, id: articleId } } }));
   }
   searchKbArticles(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
-    const keyword = typeof body['SearchText'] === 'string' ? body['SearchText'] : '';
-    // Perform a simple keyword lookup via the knowledgebase article endpoint
-    return this.sdk()
-      .then(s => s.knowledgeBase.appIdKnowledgebaseId({ params: { path: { appId, id: 0 } } }))
-      .then(r =>
-        Array.isArray(r)
-          ? r.filter(item => {
-              const s = typeof item === 'object' && item !== null ? JSON.stringify(item).toLowerCase() : '';
-              return keyword ? s.includes(keyword.toLowerCase()) : true;
-            })
-          : [],
-      ) as Promise<readonly unknown[]>;
+    return this.sdk().then(async s => {
+      const post = s.POST as unknown as (p: string, o: unknown) => Promise<{ data: unknown; error: unknown }>;
+      const { data, error } = await post('/api/{appId}/knowledgebase/search', {
+        params: { path: { appId } },
+        body: sanitizeTo(body, ARTICLE_SEARCH_KEYS),
+      });
+      if (error) {
+        throw new Error(`KB search failed: ${JSON.stringify(error)}`);
+      }
+      return Array.isArray(data) ? data : [];
+    });
   }
   listKbCategories(appId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s =>

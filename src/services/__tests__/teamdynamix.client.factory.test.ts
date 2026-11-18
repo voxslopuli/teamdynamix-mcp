@@ -39,6 +39,7 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
     people: {
       peopleUid: vi.fn().mockResolvedValue({ UID: 'abc', FullName: 'Test User' }),
       peopleLookup: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Test User' }]),
+      postPeopleSearch: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Test User' }]),
       groupsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Test Group' }),
       groupsIdMembers: vi.fn().mockResolvedValue([{ UID: 'abc' }]),
       searchGroups: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Group' }]),

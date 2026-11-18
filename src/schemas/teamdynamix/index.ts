@@ -97,30 +97,59 @@ export const TicketCommentSchema = z.object({
 // People & Groups schemas
 // ---------------------------------------------------------------------------
 
-export const UserSearchSchema = z.object({
-  SearchText: z.string().max(500).optional().describe('Name, username, or email to search for.'),
-  IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) users.'),
-  IsEmployee: z.boolean().optional().describe('Filter to employees only.'),
-  AppID: z.number().int().positive().optional().describe('Scope search to a specific application.'),
-  MaxResults: z.number().int().min(1).max(1000).optional().default(25).describe('Maximum results (1–1000).'),
-});
+export const UserSearchSchema = z
+  .object({
+    SearchText: z.string().max(500).optional().describe('Name, username, or email to search for.'),
+    AccountIDs: z.array(z.number().int()).optional().describe('Filter by account IDs (default account only).'),
+    AlternateID: z.string().optional().describe('Filter by alternate ID.'),
+    AppName: z.string().optional().describe('Filter by system-defined application name.'),
+    AuthenticationUserName: z.string().optional().describe('Exact-match authentication username (max one result).'),
+    ExternalID: z.string().optional().describe('Filter by external ID.'),
+    IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) users.'),
+    IsConfidential: z.boolean().optional().describe('Filter by confidential status.'),
+    IsEmployee: z.boolean().optional().describe('Filter to employees only.'),
+    MaxResults: z.number().int().min(1).max(1000).optional().describe('Maximum results (1-1000).'),
+    PhoneNumber: z.string().optional().describe('Filter by phone number.'),
+    ReferenceIDs: z.array(z.string()).optional().describe('Filter by user reference IDs (GUIDs).'),
+    SecurityRoleID: z.number().int().optional().describe('Filter by security role ID.'),
+    UserName: z.string().optional().describe('Filter by username.'),
+  })
+  .strict();
 
-export const GroupSearchSchema = z.object({
-  NameLike: z.string().max(500).optional().describe('Partial group name to search.'),
-  IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) groups.'),
-  AppID: z.number().int().positive().optional().describe('Scope search to a specific application.'),
-});
+export const GroupSearchSchema = z
+  .object({
+    NameLike: z.string().max(500).optional().describe('Partial group name to search.'),
+    IsActive: z.boolean().optional().describe('Filter by active (true) or inactive (false) groups.'),
+    AssociatedAppID: z.number().int().positive().optional().describe('Filter by associated application ID.'),
+    HasAppID: z
+      .boolean()
+      .optional()
+      .describe('Filter to groups with (true) or without (false) an associated application.'),
+    HasSystemAppName: z
+      .boolean()
+      .optional()
+      .describe('Filter to groups with (true) or without (false) a system app name.'),
+  })
+  .strict();
 
 // ---------------------------------------------------------------------------
 // Knowledge Base schemas
 // ---------------------------------------------------------------------------
 
-export const KbArticleSearchSchema = z.object({
-  SearchText: z.string().max(500).optional().describe('Full-text search within articles.'),
-  CategoryID: z.number().int().positive().optional().describe('Filter by KB category ID.'),
-  IsPublished: z.boolean().optional().describe('Filter to published articles only.'),
-  MaxResults: z.number().int().min(1).max(500).optional().default(25).describe('Maximum results (1–500).'),
-});
+export const KbArticleSearchSchema = z
+  .object({
+    SearchText: z.string().max(500).optional().describe('Full-text search within articles.'),
+    AuthorUID: z.string().uuid().optional().describe('Filter by author GUID.'),
+    CategoryID: z.number().int().positive().optional().describe('Filter by KB category ID.'),
+    CustomAttributes: z.array(z.record(z.string(), z.unknown())).optional().describe('Filter by custom attributes.'),
+    IncludeArticleBodies: z.boolean().optional().describe('Include article bodies in results.'),
+    IncludeShortcuts: z.boolean().optional().describe('Include shortcuts in results.'),
+    IsPublic: z.boolean().optional().describe('Filter by public visibility.'),
+    IsPublished: z.boolean().optional().describe('Filter to published articles only.'),
+    ReturnCount: z.number().int().min(1).max(500).optional().describe('Maximum results (1-500).'),
+    Status: z.number().int().optional().describe('Filter by article status ID.'),
+  })
+  .strict();
 
 // ---------------------------------------------------------------------------
 // Asset / CMDB schemas
