@@ -1,3 +1,10 @@
+## v0.5.2 - 2026-11-18
+
+- feat: migrate to `@voxslopuli/teamdynamix-ts@0.3.0` (regenerated from the live deployment spec) — the raw-POST workarounds for `tickets/search` and the KB search route are gone; both now go through typed SDK methods
+- feat: feed reply expansion now targets `/api/feed/{id}` via the SDK's typed route (an operation the live spec documents; previously an undocumented raw call)
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.1...v0.5.2
+
 ## v0.5.1 - 2026-11-18
 
 - fix: published package was missing code-split chunk files (new `tdx-watch-sweep` CLI entry caused tsup splitting); builds are now single-file per entry and the tarball is self-contained (#20)

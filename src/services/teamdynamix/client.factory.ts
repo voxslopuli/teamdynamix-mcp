@@ -103,11 +103,10 @@ export class UnifiedTeamDynamixClient {
   }
   searchTickets(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
-      // The bundled OpenAPI spec omits the search request body; the endpoint accepts one at runtime.
-      const { data, error } = await s.POST('/api/{appId}/tickets/search', {
+      const { data, error } = (await s.tickets.appIdTicketsSearch({
         params: { path: { appId } },
         body: mapTicketSearchBody(body),
-      } as never);
+      })) as { data: unknown; error: unknown };
       if (error) {
         throw new Error(`Ticket search failed: ${JSON.stringify(error)}`);
       }
@@ -175,10 +174,14 @@ export class UnifiedTeamDynamixClient {
     );
     for (const entry of missing.slice(0, limit)) {
       const target = entry as { ID: number; Replies?: unknown[] };
-      // The bundled OpenAPI spec omits this operation's response shape; it returns the entry with replies.
-      const { data, error } = (await s.GET('/api/feed/{id}', {
+      // GET /api/feed/{id} resolves under the SDK's ${number} path-key style;
+      // call it directly with the interpolated URL.
+      const { data, error } = (await s.GET(`/api/feed/${target.ID}`, {
         params: { path: { id: target.ID } },
-      } as never)) as { data: { Replies?: unknown[] } | null; error: unknown };
+      })) as {
+        data: { Replies?: unknown[] } | null;
+        error: unknown;
+      };
       if (error) {
         const detail = typeof error === 'string' ? error : JSON.stringify(error);
         throw new Error(`Failed to fetch replies for feed entry ${target.ID} (GET /api/feed/{id}): ${detail}`);
@@ -262,11 +265,10 @@ export class UnifiedTeamDynamixClient {
   }
   searchKbArticles(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
-      const post = s.POST as unknown as (p: string, o: unknown) => Promise<{ data: unknown; error: unknown }>;
-      const { data, error } = await post('/api/{appId}/knowledgebase/search', {
+      const { data, error } = (await s.referenceData.appIdKnowledgebaseSearch({
         params: { path: { appId } },
         body: sanitizeTo(body, ARTICLE_SEARCH_KEYS),
-      });
+      })) as { data: unknown; error: unknown };
       if (error) {
         throw new Error(`KB search failed: ${JSON.stringify(error)}`);
       }

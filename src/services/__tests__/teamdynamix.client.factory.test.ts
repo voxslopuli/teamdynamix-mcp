@@ -19,6 +19,7 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
     },
     tickets: {
       appIdTicketsId: vi.fn().mockResolvedValue({ ID: 9001, Title: 'Test Ticket' }),
+      appIdTicketsSearch: vi.fn().mockResolvedValue({ data: [{ ID: 7 }], error: undefined }),
       appIdTicketsTypes: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Incident' }]),
       appIdTicketsPriorities: vi.fn().mockResolvedValue([{ ID: 1, Name: 'High' }]),
       appIdTicketsUrgencies: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Urgent' }]),
@@ -43,6 +44,18 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
       groupsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Test Group' }),
       groupsIdMembers: vi.fn().mockResolvedValue([{ UID: 'abc' }]),
       searchGroups: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Group' }]),
+    },
+    referenceData: {
+      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55, Subject: 'KB Hit' }], error: undefined }),
+      accounts: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Account' }]),
+      accountsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Account' }),
+      locations: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Location' }]),
+      industries: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Industry' }]),
+      securityrolesPermissions: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Role' }]),
+      attributesCustom: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Attribute' }]),
+      appIdTicketsStatuses: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Open' }]),
+      appIdAssetsManufacturers: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Vendor' }]),
+      appIdServicesOfferings: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Offering' }]),
     },
     ticketRelationships: {
       appIdTicketsTicketIdTasks: vi.fn().mockResolvedValue([{ ID: 1, Title: 'Task' }]),
@@ -92,17 +105,6 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
       timeTypes: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Type' }]),
       timeEntriesFeed: vi.fn().mockResolvedValue([{ ID: 1, Hours: 8 }]),
       deleteTimeEntry: vi.fn().mockResolvedValue({ deleted: true }),
-    },
-    referenceData: {
-      accounts: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Account' }]),
-      accountsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Account' }),
-      locations: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Location' }]),
-      industries: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Industry' }]),
-      securityrolesPermissions: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Role' }]),
-      attributesCustom: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Attribute' }]),
-      appIdTicketsStatuses: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Open' }]),
-      appIdAssetsManufacturers: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Vendor' }]),
-      appIdServicesOfferings: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Offering' }]),
     },
     helpers: {
       findAccountByName: vi.fn().mockResolvedValue({ ID: 1, Name: 'Account' }),
@@ -218,25 +220,22 @@ describe('UnifiedTeamDynamixClient', () => {
 
     it('searchTickets sends the search body to the search endpoint (issue #16)', async () => {
       const sdk = await createMcpSdkClient(baseConfig);
-      const postMock = sdk.POST as unknown as ReturnType<typeof vi.fn>;
-      postMock.mockResolvedValue({ data: [{ ID: 7 }], error: undefined });
+      const searchMock = sdk.tickets.appIdTicketsSearch as unknown as ReturnType<typeof vi.fn>;
+      searchMock.mockResolvedValue({ data: [{ ID: 7 }], error: undefined });
 
       const tickets = await client.searchTickets(42, {
         MaxResults: 50,
         ResponsibleGroupIDs: [20618],
         StatusIDs: [128712],
       });
-      expect(postMock).toHaveBeenCalledWith(
-        '/api/{appId}/tickets/search',
-        expect.objectContaining({
-          params: { path: { appId: 42 } },
-          body: expect.objectContaining({
-            MaxResults: 50,
-            ResponsibilityGroupIDs: [20618],
-            StatusIDs: [128712],
-          }),
+      expect(searchMock).toHaveBeenCalledWith({
+        params: { path: { appId: 42 } },
+        body: expect.objectContaining({
+          MaxResults: 50,
+          ResponsibilityGroupIDs: [20618],
+          StatusIDs: [128712],
         }),
-      );
+      });
       expect(tickets).toEqual([{ ID: 7 }]);
     });
 

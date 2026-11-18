@@ -11,6 +11,9 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
       postPeopleSearch: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Alice' }]),
       searchGroups: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Group' }]),
     },
+    referenceData: {
+      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55 }], error: undefined }),
+    },
     knowledgeBase: {
       appIdKnowledgebaseCategories: vi.fn().mockResolvedValue([]),
     },
@@ -90,27 +93,28 @@ describe('gateway search correctness (#18 and related)', () => {
     it('calls the real KB search route instead of fetching article id 0', async () => {
       await client.searchKbArticles(42, { SearchText: 'vpn' });
       const sdk = await createMcpSdkClient(baseConfig);
-      expect(sdk.POST).toHaveBeenCalledWith(
-        '/api/{appId}/knowledgebase/search',
-        expect.objectContaining({
-          params: { path: { appId: 42 } },
-          body: expect.objectContaining({ SearchText: 'vpn' }),
-        }),
-      );
+      expect(sdk.referenceData.appIdKnowledgebaseSearch).toHaveBeenCalledWith({
+        params: { path: { appId: 42 } },
+        body: expect.objectContaining({ SearchText: 'vpn' }),
+      });
     });
 
     it('drops keys unknown to the live ArticleSearch schema', async () => {
       await client.searchKbArticles(42, { SearchText: 'vpn', MaxResults: 10 });
       const sdk = await createMcpSdkClient(baseConfig);
-      const call = vi.mocked(sdk.POST).mock.calls[0];
-      const body = (call[1] as { body: Record<string, unknown> }).body;
-      expect(body).toEqual({ SearchText: 'vpn' });
-      expect(body).not.toHaveProperty('MaxResults');
+      const arg = (
+        vi.mocked(sdk.referenceData.appIdKnowledgebaseSearch).mock.calls[0] as [{ body: Record<string, unknown> }]
+      )[0];
+      expect(arg.body).toEqual({ SearchText: 'vpn' });
+      expect(arg.body).not.toHaveProperty('MaxResults');
     });
 
     it('throws a clear error when the search route returns an error', async () => {
       const sdk = await createMcpSdkClient(baseConfig);
-      vi.mocked(sdk.POST).mockResolvedValueOnce({ data: null, error: { message: 'denied' } } as never);
+      vi.mocked(sdk.referenceData.appIdKnowledgebaseSearch).mockResolvedValueOnce({
+        data: null,
+        error: { message: 'denied' },
+      } as never);
       await expect(client.searchKbArticles(42, { SearchText: 'vpn' })).rejects.toThrow(/KB search/i);
     });
   });
