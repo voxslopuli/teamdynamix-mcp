@@ -8,13 +8,11 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
     GET: vi.fn().mockResolvedValue({ data: null, error: undefined }),
     POST: vi.fn().mockResolvedValue({ data: [], error: undefined }),
     people: {
-      postPeopleSearch: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Alice' }]),
+      peopleSearch: vi.fn().mockResolvedValue({ data: [{ UID: 'abc', FullName: 'Alice' }], error: undefined }),
       searchGroups: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Group' }]),
     },
-    referenceData: {
-      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55 }], error: undefined }),
-    },
     knowledgeBase: {
+      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55 }], error: undefined }),
       appIdKnowledgebaseCategories: vi.fn().mockResolvedValue([]),
     },
   }),
@@ -44,13 +42,13 @@ describe('gateway search correctness (#18 and related)', () => {
     it('routes through POST /api/people/search, not GET peopleLookup', async () => {
       await client.searchUsers({ SearchText: 'alice' });
       const sdk = await createMcpSdkClient(baseConfig);
-      expect(sdk.people.postPeopleSearch).toHaveBeenCalledTimes(1);
+      expect(sdk.people.peopleSearch).toHaveBeenCalledTimes(1);
     });
 
     it('passes the sanitized UserSearch body through', async () => {
       await client.searchUsers({ SearchText: 'alice', IsActive: false });
       const sdk = await createMcpSdkClient(baseConfig);
-      expect(sdk.people.postPeopleSearch).toHaveBeenCalledWith({
+      expect(sdk.people.peopleSearch).toHaveBeenCalledWith({
         body: { SearchText: 'alice', IsActive: false },
       });
     });
@@ -58,7 +56,7 @@ describe('gateway search correctness (#18 and related)', () => {
     it('drops keys unknown to the live UserSearch schema', async () => {
       await client.searchUsers({ SearchText: 'alice', AppID: 7, Bogus: 'x' });
       const sdk = await createMcpSdkClient(baseConfig);
-      const arg = (vi.mocked(sdk.people.postPeopleSearch).mock.calls[0] as [{ body: Record<string, unknown> }])[0];
+      const arg = (vi.mocked(sdk.people.peopleSearch).mock.calls[0] as [{ body: Record<string, unknown> }])[0];
       expect(arg.body).toEqual({ SearchText: 'alice' });
       expect(arg.body).not.toHaveProperty('AppID');
       expect(arg.body).not.toHaveProperty('Bogus');
@@ -67,7 +65,7 @@ describe('gateway search correctness (#18 and related)', () => {
     it('does not call peopleLookup', async () => {
       await client.searchUsers({ SearchText: 'alice' });
       const sdk = await createMcpSdkClient(baseConfig);
-      expect(sdk.people.postPeopleSearch).toHaveBeenCalledTimes(1);
+      expect(sdk.people.peopleSearch).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -93,7 +91,7 @@ describe('gateway search correctness (#18 and related)', () => {
     it('calls the real KB search route instead of fetching article id 0', async () => {
       await client.searchKbArticles(42, { SearchText: 'vpn' });
       const sdk = await createMcpSdkClient(baseConfig);
-      expect(sdk.referenceData.appIdKnowledgebaseSearch).toHaveBeenCalledWith({
+      expect(sdk.knowledgeBase.appIdKnowledgebaseSearch).toHaveBeenCalledWith({
         params: { path: { appId: 42 } },
         body: expect.objectContaining({ SearchText: 'vpn' }),
       });
@@ -103,7 +101,7 @@ describe('gateway search correctness (#18 and related)', () => {
       await client.searchKbArticles(42, { SearchText: 'vpn', MaxResults: 10 });
       const sdk = await createMcpSdkClient(baseConfig);
       const arg = (
-        vi.mocked(sdk.referenceData.appIdKnowledgebaseSearch).mock.calls[0] as [{ body: Record<string, unknown> }]
+        vi.mocked(sdk.knowledgeBase.appIdKnowledgebaseSearch).mock.calls[0] as [{ body: Record<string, unknown> }]
       )[0];
       expect(arg.body).toEqual({ SearchText: 'vpn' });
       expect(arg.body).not.toHaveProperty('MaxResults');
@@ -111,7 +109,7 @@ describe('gateway search correctness (#18 and related)', () => {
 
     it('throws a clear error when the search route returns an error', async () => {
       const sdk = await createMcpSdkClient(baseConfig);
-      vi.mocked(sdk.referenceData.appIdKnowledgebaseSearch).mockResolvedValueOnce({
+      vi.mocked(sdk.knowledgeBase.appIdKnowledgebaseSearch).mockResolvedValueOnce({
         data: null,
         error: { message: 'denied' },
       } as never);

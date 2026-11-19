@@ -983,52 +983,89 @@ function registerTeamDynamixProjectsGateway(server: McpServer): void {
 
         switch (action) {
           case 'get_project': {
-            const parsed = parsePayload(z.object({ project_id: z.number().int().positive() }), payload, action);
-            const project = await client.getProject(parsed.project_id);
+            const parsed = parsePayload(
+              z.object({ app_id: TeamDynamixAppIdSchema, project_id: z.number().int().positive() }),
+              payload,
+              action,
+            );
+            const project = await client.getProject(parsed.app_id, parsed.project_id);
             return toSuccessResponse(project, response_format);
           }
           case 'search_projects': {
-            const parsed = parsePayload(z.object({ search: ProjectSearchSchema }), payload, action);
-            const projects = await client.searchProjects(parsed.search as Record<string, unknown>);
+            const parsed = parsePayload(
+              z.object({ app_id: TeamDynamixAppIdSchema, search: ProjectSearchSchema }),
+              payload,
+              action,
+            );
+            const projects = await client.searchProjects(parsed.app_id, parsed.search as Record<string, unknown>);
             return toSuccessResponse({ count: projects.length, projects }, response_format);
           }
           case 'list_project_types': {
-            const types = await client.listProjectTypes();
+            const parsed = parsePayload(z.object({ app_id: TeamDynamixAppIdSchema }), payload, action);
+            const types = (await client.listProjectTypes(parsed.app_id)) as readonly unknown[];
             return toSuccessResponse({ count: types.length, types }, response_format);
           }
           case 'get_project_plans': {
-            const parsed = parsePayload(z.object({ project_id: z.number().int().positive() }), payload, action);
-            const plans = await client.getProjectPlans(parsed.project_id);
+            const parsed = parsePayload(
+              z.object({ app_id: TeamDynamixAppIdSchema, project_id: z.number().int().positive() }),
+              payload,
+              action,
+            );
+            const plans = await client.getProjectPlans(parsed.app_id, parsed.project_id);
             return toSuccessResponse({ projectId: parsed.project_id, count: plans.length, plans }, response_format);
           }
           case 'get_project_issues': {
-            const parsed = parsePayload(z.object({ project_id: z.number().int().positive() }), payload, action);
-            const issues = await client.getProjectIssues(parsed.project_id);
+            const parsed = parsePayload(
+              z.object({ app_id: TeamDynamixAppIdSchema, project_id: z.number().int().positive() }),
+              payload,
+              action,
+            );
+            const issues = await client.getProjectIssues(parsed.app_id, parsed.project_id);
             return toSuccessResponse({ projectId: parsed.project_id, count: issues.length, issues }, response_format);
           }
           case 'get_project_risks': {
-            const parsed = parsePayload(z.object({ project_id: z.number().int().positive() }), payload, action);
-            const risks = await client.getProjectRisks(parsed.project_id);
+            const parsed = parsePayload(
+              z.object({ app_id: TeamDynamixAppIdSchema, project_id: z.number().int().positive() }),
+              payload,
+              action,
+            );
+            const risks = await client.getProjectRisks(parsed.app_id, parsed.project_id);
             return toSuccessResponse({ projectId: parsed.project_id, count: risks.length, risks }, response_format);
           }
           case 'create_project_issue': {
             const parsed = parsePayload(
-              z.object({ project_id: z.number().int().positive(), issue: ProjectIssueCreateSchema }),
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                project_id: z.number().int().positive(),
+                issue: ProjectIssueCreateSchema,
+              }),
               payload,
               action,
             );
             assertWriteToolsEnabled(getTeamDynamixConfig());
-            const created = await client.createProjectIssue(parsed.project_id, parsed.issue as Record<string, unknown>);
+            const created = await client.createProjectIssue(
+              parsed.app_id,
+              parsed.project_id,
+              parsed.issue as Record<string, unknown>,
+            );
             return toSuccessResponse(created, response_format);
           }
           case 'create_project_risk': {
             const parsed = parsePayload(
-              z.object({ project_id: z.number().int().positive(), risk: ProjectRiskCreateSchema }),
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                project_id: z.number().int().positive(),
+                risk: ProjectRiskCreateSchema,
+              }),
               payload,
               action,
             );
             assertWriteToolsEnabled(getTeamDynamixConfig());
-            const created = await client.createProjectRisk(parsed.project_id, parsed.risk as Record<string, unknown>);
+            const created = await client.createProjectRisk(
+              parsed.app_id,
+              parsed.project_id,
+              parsed.risk as Record<string, unknown>,
+            );
             return toSuccessResponse(created, response_format);
           }
         }

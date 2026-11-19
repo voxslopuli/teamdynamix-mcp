@@ -1,3 +1,11 @@
+## v0.5.3 - 2026-11-19
+
+- fix: **corrected broken runtime calls to the regenerated SDK** — `postPeopleSearch`, `appIdTicketsSearch`, and `appIdKnowledgebaseSearch` did not exist as SDK methods (the index-signed domain types let the wrong names compile); `search_users` now calls the real `people.peopleSearch`, ticket/KB searches call the real typed methods. A new SDK-surface contract test (real SDK client, no network) asserts every method the client factory invokes exists, so this class of silent break is caught in CI
+- feat: on SDK `@voxslopuli/teamdynamix-ts@0.3.1` — exposes every generated route (GET and POST), preserves domain buckets, and retargets project + custom-attribute helpers to the live API
+- **breaking tool-input change:** project tools (`get_project`, `search_projects`, `list_project_types`, `get_project_plans`, `get_project_issues`, `get_project_risks`, `create_project_issue`, `create_project_risk`) now require `app_id` — the live API scopes all project routes to the owning application; the legacy global `/api/projects/*` routes no longer exist
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.2...v0.5.3
+
 ## v0.5.2 - 2026-11-18
 
 - feat: migrate to `@voxslopuli/teamdynamix-ts@0.3.0` (regenerated from the live deployment spec) — the raw-POST workarounds for `tickets/search` and the KB search route are gone; both now go through typed SDK methods

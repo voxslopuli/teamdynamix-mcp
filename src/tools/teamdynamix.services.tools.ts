@@ -151,15 +151,24 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
       title: 'Get Project',
       description: 'Retrieves full details for a TeamDynamix project by its numeric ID.',
       inputSchema: {
+        app_id: z.number().int().positive().describe('Ticketing/portfolio application that owns the project.'),
         project_id: z.number().int().positive().describe('TeamDynamix project ID.'),
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
     },
-    async ({ project_id, response_format }: { project_id: number; response_format: ResponseFormat }) => {
+    async ({
+      app_id,
+      project_id,
+      response_format,
+    }: {
+      app_id: number;
+      project_id: number;
+      response_format: ResponseFormat;
+    }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const project = await client.getProject(project_id);
+        const project = await client.getProject(app_id, project_id);
         return {
           content: [{ type: 'text', text: render(project, response_format) }],
           structuredContent: project as Record<string, unknown>,
@@ -176,21 +185,24 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
       title: 'Search Projects',
       description: 'Searches TeamDynamix projects by name, type, manager, or active status.',
       inputSchema: {
+        app_id: z.number().int().positive().describe('Ticketing/portfolio application that owns the projects.'),
         search: ProjectSearchSchema,
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: false, destructiveHint: false, openWorldHint: false },
     },
     async ({
+      app_id,
       search,
       response_format,
     }: {
+      app_id: number;
       search: z.infer<typeof ProjectSearchSchema>;
       response_format: ResponseFormat;
     }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const projects = await client.searchProjects(search as Record<string, unknown>);
+        const projects = await client.searchProjects(app_id, search as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(projects, response_format) }],
           structuredContent: { count: projects.length, projects },
@@ -205,16 +217,18 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
     `${TEAMDYNAMIX_TOOL_PREFIX}_list_project_types`,
     {
       title: 'List Project Types',
-      description: 'Returns all project type definitions available in TeamDynamix.',
+      description:
+        'Returns the project type definitions available in a TeamDynamix application (live API lists types per app).',
       inputSchema: {
+        app_id: z.number().int().positive().describe('Ticketing/portfolio application that owns the project types.'),
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
     },
-    async ({ response_format }: { response_format: ResponseFormat }) => {
+    async ({ app_id, response_format }: { app_id: number; response_format: ResponseFormat }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const types = await client.listProjectTypes();
+        const types = (await client.listProjectTypes(app_id)) as readonly unknown[];
         return {
           content: [{ type: 'text', text: render(types, response_format) }],
           structuredContent: { count: types.length, types },
@@ -231,15 +245,24 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
       title: 'Get Project Plans',
       description: 'Returns all plans/boards for a TeamDynamix project.',
       inputSchema: {
+        app_id: z.number().int().positive().describe('Ticketing/portfolio application that owns the project.'),
         project_id: z.number().int().positive().describe('TeamDynamix project ID.'),
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
     },
-    async ({ project_id, response_format }: { project_id: number; response_format: ResponseFormat }) => {
+    async ({
+      app_id,
+      project_id,
+      response_format,
+    }: {
+      app_id: number;
+      project_id: number;
+      response_format: ResponseFormat;
+    }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const plans = await client.getProjectPlans(project_id);
+        const plans = await client.getProjectPlans(app_id, project_id);
         return {
           content: [{ type: 'text', text: render(plans, response_format) }],
           structuredContent: { projectId: project_id, count: plans.length, plans },
@@ -256,15 +279,24 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
       title: 'Get Project Issues',
       description: 'Returns all issues for a TeamDynamix project.',
       inputSchema: {
+        app_id: z.number().int().positive().describe('Ticketing/portfolio application that owns the project.'),
         project_id: z.number().int().positive().describe('TeamDynamix project ID.'),
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
     },
-    async ({ project_id, response_format }: { project_id: number; response_format: ResponseFormat }) => {
+    async ({
+      app_id,
+      project_id,
+      response_format,
+    }: {
+      app_id: number;
+      project_id: number;
+      response_format: ResponseFormat;
+    }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const issues = await client.getProjectIssues(project_id);
+        const issues = await client.getProjectIssues(app_id, project_id);
         return {
           content: [{ type: 'text', text: render(issues, response_format) }],
           structuredContent: { projectId: project_id, count: issues.length, issues },
@@ -281,15 +313,24 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
       title: 'Get Project Risks',
       description: 'Returns all risks for a TeamDynamix project.',
       inputSchema: {
+        app_id: z.number().int().positive().describe('Ticketing/portfolio application that owns the project.'),
         project_id: z.number().int().positive().describe('TeamDynamix project ID.'),
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
     },
-    async ({ project_id, response_format }: { project_id: number; response_format: ResponseFormat }) => {
+    async ({
+      app_id,
+      project_id,
+      response_format,
+    }: {
+      app_id: number;
+      project_id: number;
+      response_format: ResponseFormat;
+    }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const risks = await client.getProjectRisks(project_id);
+        const risks = await client.getProjectRisks(app_id, project_id);
         return {
           content: [{ type: 'text', text: render(risks, response_format) }],
           structuredContent: { projectId: project_id, count: risks.length, risks },
@@ -325,7 +366,7 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
         const config = getTeamDynamixConfig();
         assertWriteToolsEnabled(config);
         const client = createConfiguredTeamDynamixClient();
-        const created = await client.createProjectIssue(project_id, issue as Record<string, unknown>);
+        const created = await client.createProjectIssue(1, project_id, issue as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
           structuredContent: created as Record<string, unknown>,
@@ -361,7 +402,7 @@ export function registerTeamDynamixProjectTools(server: McpServer): void {
         const config = getTeamDynamixConfig();
         assertWriteToolsEnabled(config);
         const client = createConfiguredTeamDynamixClient();
-        const created = await client.createProjectRisk(project_id, risk as Record<string, unknown>);
+        const created = await client.createProjectRisk(1, project_id, risk as Record<string, unknown>);
         return {
           content: [{ type: 'text', text: render(created, response_format) }],
           structuredContent: created as Record<string, unknown>,

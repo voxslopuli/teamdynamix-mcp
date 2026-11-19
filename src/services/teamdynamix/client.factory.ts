@@ -239,7 +239,7 @@ export class UnifiedTeamDynamixClient {
     return this.sdk().then(s => s.people.peopleUid({ params: { path: { uid } } }));
   }
   searchUsers(body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.people.postPeopleSearch({ body: sanitizeTo(body, USER_SEARCH_KEYS) })) as Promise<
+    return this.sdk().then(s => s.people.peopleSearch({ body: sanitizeTo(body, USER_SEARCH_KEYS) })) as Promise<
       readonly unknown[]
     >;
   }
@@ -265,7 +265,7 @@ export class UnifiedTeamDynamixClient {
   }
   searchKbArticles(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
-      const { data, error } = (await s.referenceData.appIdKnowledgebaseSearch({
+      const { data, error } = (await s.knowledgeBase.appIdKnowledgebaseSearch({
         params: { path: { appId } },
         body: sanitizeTo(body, ARTICLE_SEARCH_KEYS),
       })) as { data: unknown; error: unknown };
@@ -360,28 +360,34 @@ export class UnifiedTeamDynamixClient {
   //
   // Projects
   //
-  getProject(projectId: number): Promise<unknown> {
-    return this.sdk().then(s => s.projects.projectsId({ params: { path: { id: projectId } } }));
+  getProject(appId: number, projectId: number): Promise<unknown> {
+    return this.sdk().then(s => s.projects.appIdProjectsId({ params: { path: { appId, id: projectId } } }));
   }
-  searchProjects(_body: Record<string, unknown>): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.projects.projectsFeed()) as Promise<readonly unknown[]>;
+  searchProjects(appId: number, _body: Record<string, unknown>): Promise<readonly unknown[]> {
+    return this.sdk().then(s => s.projects.appIdProjectsFeed({ params: { path: { appId } } })) as Promise<
+      readonly unknown[]
+    >;
   }
-  listProjectTypes(): Promise<readonly unknown[]> {
-    return this.sdk().then(s => s.projects.projectsTypes()) as Promise<readonly unknown[]>;
+  listProjectTypes(appId: number): Promise<readonly unknown[]> {
+    // /api/{appId}/projects/types is bucketed under referenceData in the SDK
+    // manifest (its live-spec tag), not under projects.
+    return this.sdk().then(s => s.referenceData.appIdProjectsTypes({ params: { path: { appId } } })) as Promise<
+      readonly unknown[]
+    >;
   }
-  getProjectPlans(projectId: number): Promise<readonly unknown[]> {
+  getProjectPlans(appId: number, projectId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s =>
-      s.projects.projectsProjectIDPlansPlanID({ params: { path: { id: projectId } } }),
+      s.projects.appIdProjectsProjectIDPlansPlanID({ params: { path: { appId, id: projectId } } }),
     ) as Promise<readonly unknown[]>;
   }
-  getProjectIssues(projectId: number): Promise<readonly unknown[]> {
+  getProjectIssues(appId: number, projectId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s =>
-      s.projects.projectsProjectIdIssuesCategories({ params: { path: { id: projectId } } }),
+      s.projects.appIdProjectsProjectIdIssuesCategories({ params: { path: { appId, id: projectId } } }),
     ) as Promise<readonly unknown[]>;
   }
-  getProjectRisks(projectId: number): Promise<readonly unknown[]> {
+  getProjectRisks(appId: number, projectId: number): Promise<readonly unknown[]> {
     return this.sdk().then(s =>
-      s.projects.projectsProjectIdRisksCategories({ params: { path: { id: projectId } } }),
+      s.projects.appIdProjectsProjectIdRisksCategories({ params: { path: { appId, id: projectId } } }),
     ) as Promise<readonly unknown[]>;
   }
 
@@ -457,11 +463,11 @@ export class UnifiedTeamDynamixClient {
   updateKbArticle(appId: number, articleId: number, body: Record<string, unknown>): Promise<unknown> {
     return this.sdk().then(s => s.knowledgeBase.updateArticle({ appId, articleId, body }));
   }
-  createProjectIssue(_projectId: number, body: Record<string, unknown>): Promise<unknown> {
-    return this.sdk().then(s => s.projects.createIssue({ body }));
+  createProjectIssue(appId: number, _projectId: number, body: Record<string, unknown>): Promise<unknown> {
+    return this.sdk().then(s => s.projects.createIssue({ appId, body }));
   }
-  createProjectRisk(_projectId: number, body: Record<string, unknown>): Promise<unknown> {
-    return this.sdk().then(s => s.projects.createRisk({ body }));
+  createProjectRisk(appId: number, _projectId: number, body: Record<string, unknown>): Promise<unknown> {
+    return this.sdk().then(s => s.projects.createRisk({ appId, body }));
   }
 
   //

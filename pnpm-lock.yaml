@@ -16,8 +16,8 @@ importers:
         specifier: ^1.30.0
         version: 1.30.0(zod@4.6.2)
       '@voxslopuli/teamdynamix-ts':
-        specifier: ^0.3.0
-        version: 0.3.0(openapi-types@12.1.3)
+        specifier: ^0.3.1
+        version: 0.3.1(openapi-types@12.1.3)
       tablemark:
         specifier: ^4.1.0
         version: 4.1.0
@@ -1344,8 +1344,8 @@ packages:
   '@vitest/spy@5.0.0':
     resolution: {integrity: sha512-uy+luWBAPw9XfthoHi5AkfHUnuPYEESjl0p/r+meoBnU8bxg5GDQ3Ey8MjcJ6sqahkL4PFyrvfMJJBw7LbU06g==}
 
-  '@voxslopuli/teamdynamix-ts@0.3.0':
-    resolution: {integrity: sha512-v0ZNfL6YIIn4jCrYKmz5jUyna3eFzqQlEz/sREuF2pk3GmCQcHRMbQdDWqkn9JyfPbCj2mxuMGUcHqZfTJdilA==}
+  '@voxslopuli/teamdynamix-ts@0.3.1':
+    resolution: {integrity: sha512-sMhwH3w/wf9Ns0c6YccffI/d98sqtWVc2I1t7TDrYiK6hoSW11DB/AZ/4WKfXP8YLG1sbeG7R8S6gKCavBseEQ==}
 
   '@vue/compiler-core@3.5.42':
     resolution: {integrity: sha512-2Ye1ilMtKXxl8qZUrQ5j0CdgenFp/HFQmta6rfRyfEsTG69L6Wk+tWuNoHYHMx9E8tF2Slvdg1FuwDvAXdy1LQ==}
@@ -3505,7 +3505,7 @@ snapshots:
 
   '@vitest/spy@5.0.0': {}
 
-  '@voxslopuli/teamdynamix-ts@0.3.0(openapi-types@12.1.3)':
+  '@voxslopuli/teamdynamix-ts@0.3.1(openapi-types@12.1.3)':
     dependencies:
       '@apidevtools/swagger-parser': 12.1.0(openapi-types@12.1.3)
       ajv: 8.20.0

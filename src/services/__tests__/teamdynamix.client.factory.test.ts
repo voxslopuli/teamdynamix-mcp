@@ -33,6 +33,7 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
     },
     knowledgeBase: {
       appIdKnowledgebaseId: vi.fn().mockResolvedValue({ ID: 100, Subject: 'KB Article' }),
+      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55, Subject: 'KB Hit' }], error: undefined }),
       appIdKnowledgebaseCategories: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Category' }]),
       createArticle: vi.fn().mockResolvedValue({ ID: 3001, Subject: 'New Article' }),
       updateArticle: vi.fn().mockResolvedValue({ ID: 1, Subject: 'Updated Article' }),
@@ -41,12 +42,13 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
       peopleUid: vi.fn().mockResolvedValue({ UID: 'abc', FullName: 'Test User' }),
       peopleLookup: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Test User' }]),
       postPeopleSearch: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Test User' }]),
+      peopleSearch: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Test User' }]),
       groupsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Test Group' }),
       groupsIdMembers: vi.fn().mockResolvedValue([{ UID: 'abc' }]),
       searchGroups: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Group' }]),
     },
     referenceData: {
-      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55, Subject: 'KB Hit' }], error: undefined }),
+      appIdProjectsTypes: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Project Type' }]),
       accounts: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Account' }]),
       accountsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Account' }),
       locations: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Location' }]),
@@ -91,12 +93,11 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
       deleteServiceCategory: vi.fn().mockResolvedValue({ deleted: true }),
     },
     projects: {
-      projectsFeed: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Project' }]),
-      projectsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Project' }),
-      projectsTypes: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Project Type' }]),
-      projectsProjectIDPlansPlanID: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Plan' }]),
-      projectsProjectIdIssuesCategories: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Issue' }]),
-      projectsProjectIdRisksCategories: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Risk' }]),
+      appIdProjectsFeed: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Project' }]),
+      appIdProjectsId: vi.fn().mockResolvedValue({ ID: 1, Name: 'Project' }),
+      appIdProjectsProjectIDPlansPlanID: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Plan' }]),
+      appIdProjectsProjectIdIssuesCategories: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Issue' }]),
+      appIdProjectsProjectIdRisksCategories: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Risk' }]),
       createIssue: vi.fn().mockResolvedValue({ ID: 1 }),
       createRisk: vi.fn().mockResolvedValue({ ID: 1 }),
     },
@@ -472,42 +473,42 @@ describe('UnifiedTeamDynamixClient', () => {
 
   describe('projects', () => {
     it('getProject', async () => {
-      const project = await client.getProject(1);
+      const project = await client.getProject(1, 42);
       expect(project).toHaveProperty('Name', 'Project');
     });
 
     it('searchProjects', async () => {
-      const projects = await client.searchProjects({});
+      const projects = await client.searchProjects(1, {});
       expect(projects).toHaveLength(1);
     });
 
     it('listProjectTypes', async () => {
-      const types = await client.listProjectTypes();
+      const types = await client.listProjectTypes(1);
       expect(types).toHaveLength(1);
     });
 
     it('getProjectPlans', async () => {
-      const plans = await client.getProjectPlans(1);
+      const plans = await client.getProjectPlans(1, 42);
       expect(plans).toHaveLength(1);
     });
 
     it('getProjectIssues', async () => {
-      const issues = await client.getProjectIssues(1);
+      const issues = await client.getProjectIssues(1, 42);
       expect(issues).toHaveLength(1);
     });
 
     it('getProjectRisks', async () => {
-      const risks = await client.getProjectRisks(1);
+      const risks = await client.getProjectRisks(1, 42);
       expect(risks).toHaveLength(1);
     });
 
     it('createProjectIssue', async () => {
-      const issue = await client.createProjectIssue(1, { Title: 'Issue' });
+      const issue = await client.createProjectIssue(1, 42, { Title: 'Issue' });
       expect(issue).toHaveProperty('ID', 1);
     });
 
     it('createProjectRisk', async () => {
-      const risk = await client.createProjectRisk(1, { Title: 'Risk' });
+      const risk = await client.createProjectRisk(1, 42, { Title: 'Risk' });
       expect(risk).toHaveProperty('ID', 1);
     });
   });
