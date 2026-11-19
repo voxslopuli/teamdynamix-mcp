@@ -44,6 +44,23 @@ describe('teamdynamix watch tools registration', () => {
     }
   });
 
+  it('watch_notes list wraps the array in a record (structuredContent schema, #21)', async () => {
+    const { registerTeamDynamixWatchTools } = await import('../teamdynamix.watch.tools.js');
+    registerTeamDynamixWatchTools(server);
+    const notesCall = (
+      registerTool.mock.calls as unknown as [
+        string,
+        unknown,
+        (args: Record<string, unknown>) => Promise<{ structuredContent?: Record<string, unknown> }>,
+      ][]
+    ).find(c => c[0] === 'teamdynamix_watch_notes');
+    const handler = notesCall![2];
+    const result = await handler({ op: 'list', response_format: 'json' });
+    expect(result.structuredContent).toBeTypeOf('object');
+    expect(Array.isArray(result.structuredContent)).toBe(false);
+    expect(result.structuredContent).toHaveProperty('notes');
+  });
+
   it('watch_notes validates op requirements before touching the service', async () => {
     const { registerTeamDynamixWatchTools } = await import('../teamdynamix.watch.tools.js');
     registerTeamDynamixWatchTools(server);

@@ -229,7 +229,9 @@ export function registerTeamDynamixWatchTools(server: McpServer): void {
             if (!note_id) throw new Error('op=delete requires note_id.');
             return svc.notesDelete({ noteId: note_id });
           case 'list':
-            return svc.notesList({ appId: app_id, ticketId: ticket_id });
+            // structuredContent must be a record per the MCP SDK's tool-result
+            // schema — arrays are rejected client-side (#21).
+            return { notes: await svc.notesList({ appId: app_id, ticketId: ticket_id }) };
         }
       }),
   );

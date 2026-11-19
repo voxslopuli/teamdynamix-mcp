@@ -1,3 +1,9 @@
+## v0.5.4 - 2026-11-19
+
+- fix: `teamdynamix_watch_notes op:list` returned a bare array as `structuredContent`, which MCP clients reject against the tool-result record schema (#21); the list is now wrapped as `{ notes: [...] }` with a schema-shape regression test
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.3...v0.5.4
+
 ## v0.5.3 - 2026-11-19
 
 - fix: **corrected broken runtime calls to the regenerated SDK** — `postPeopleSearch`, `appIdTicketsSearch`, and `appIdKnowledgebaseSearch` did not exist as SDK methods (the index-signed domain types let the wrong names compile); `search_users` now calls the real `people.peopleSearch`, ticket/KB searches call the real typed methods. A new SDK-surface contract test (real SDK client, no network) asserts every method the client factory invokes exists, so this class of silent break is caught in CI
