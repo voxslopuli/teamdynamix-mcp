@@ -126,6 +126,83 @@ export class UnifiedTeamDynamixClient {
     }
     return { ticket, feed };
   }
+  //
+  // Bulk
+  //
+  static readonly BULK_CAP = 25;
+
+  /**
+   * Parallel reads of many tickets (each with feed inlined unless opted out).
+   * Per-item errors are isolated; input order preserved.
+   */
+  async bulkGetTickets(
+    appId: number,
+    ticketIds: number[],
+    opts: { includeFeed?: boolean } = {},
+  ): Promise<{
+    requested: number;
+    truncated: boolean;
+    cap: number;
+    results: Array<{ ticketId: number; ticket?: unknown; error?: string }>;
+  }> {
+    const capped = ticketIds.slice(0, UnifiedTeamDynamixClient.BULK_CAP);
+    const results = await Promise.all(
+      capped.map(async ticketId => {
+        try {
+          const ticket =
+            opts.includeFeed === false
+              ? await this.getTicket(appId, ticketId)
+              : await this.getTicketWithFeed(appId, ticketId);
+          return { ticketId, ticket };
+        } catch (error) {
+          return { ticketId, error: error instanceof Error ? error.message : String(error) };
+        }
+      }),
+    );
+    return {
+      requested: ticketIds.length,
+      truncated: ticketIds.length > capped.length,
+      cap: UnifiedTeamDynamixClient.BULK_CAP,
+      results,
+    };
+  }
+
+  /**
+   * Sequential partial updates (POST edits) for up to BULK_CAP tickets;
+   * sequential to respect per-IP rate limits. Per-item errors isolated.
+   */
+  async bulkUpdateTickets(
+    appId: number,
+    updates: ReadonlyArray<{ ticketId: number; attributes: Record<string, unknown>; comments?: string }>,
+  ): Promise<{
+    requested: number;
+    succeeded: number;
+    failed: number;
+    results: Array<{ ticketId: number; result?: unknown; error?: string }>;
+  }> {
+    const results: Array<{ ticketId: number; result?: unknown; error?: string }> = [];
+    let succeeded = 0;
+    let failed = 0;
+    for (const update of updates.slice(0, UnifiedTeamDynamixClient.BULK_CAP)) {
+      try {
+        const result = await this.updateTicket(
+          appId,
+          update.ticketId,
+          update.attributes,
+          false,
+          false,
+          update.comments ?? '',
+          false,
+        );
+        succeeded += 1;
+        results.push({ ticketId: update.ticketId, result });
+      } catch (error) {
+        failed += 1;
+        results.push({ ticketId: update.ticketId, error: error instanceof Error ? error.message : String(error) });
+      }
+    }
+    return { requested: updates.length, succeeded, failed, results };
+  }
   searchTickets(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
       // Generated domain methods return the bare API payload — executeSdkRoute

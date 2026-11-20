@@ -1,3 +1,12 @@
+## v0.5.9 - 2026-11-20
+
+- feat: bulk tools (capped at 25 items per call, per-item error isolation):
+  - `teamdynamix_bulk_get_tickets` — parallel ticket (+ feed) reads in one round trip; `include_feed: false` skips feed reads
+  - `teamdynamix_bulk_update_tickets` — sequential per-ticket patches to respect per-IP rate limits; hard-gated behind the write tools flag
+  - `teamdynamix_bulk_add_users_to_group` — surfaces the SDK's curated bulk helper with per-item failure isolation; write-gated; `dry_run` supported
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.8...v0.5.9
+
 ## v0.5.8 - 2026-11-20
 
 - feat: `get_ticket` accepts `include_feed: false` to skip the feed read entirely — a single request returning the bare ticket with no `feed` key; default stays `include_feed: true` (parallel ticket + feed reads, feed as a subfield)

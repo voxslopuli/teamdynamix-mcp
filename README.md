@@ -200,6 +200,16 @@ the API; drafts and sends stay human-owned.
   the harness triage prompt only when the queue is non-empty. Triage is read-only toward
   TDX — findings go to local notes; a human sends.
 
+## Bulk tools
+
+Capped at 25 items per call; per-item errors are isolated so one bad item never aborts the batch.
+
+| Tool                                  | Gate       | Notes                                                                  |
+| ------------------------------------- | ---------- | ---------------------------------------------------------------------- |
+| `teamdynamix_bulk_get_tickets`        | read-only  | Parallel ticket (+ feed) reads; `include_feed: false` skips feed reads |
+| `teamdynamix_bulk_update_tickets`     | write gate | Sequential per-ticket patches (POST edits) to respect rate limits      |
+| `teamdynamix_bulk_add_users_to_group` | write gate | SDK bulk helper with per-item isolation; `dry_run` supported           |
+
 ## Safety defaults
 
 | Flag                              | Default | Effect when `true`                                        |
