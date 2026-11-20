@@ -158,10 +158,15 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
     {
       title: 'Get Ticket',
       description:
-        'Retrieves a single TeamDynamix ticket by ID with its feed attached as a `feed` subfield (entries newest-first, per-entry replies expanded and inlined).',
+        'Retrieves a single TeamDynamix ticket by ID with its feed attached as a `feed` subfield (entries newest-first, per-entry replies expanded and inlined). Pass `include_feed: false` to skip the feed read entirely (single request, no feed data).',
       inputSchema: {
         app_id: TeamDynamixAppIdSchema,
         ticket_id: z.number().int().positive().describe('Ticket ID.'),
+        include_feed: z
+          .boolean()
+          .optional()
+          .default(true)
+          .describe('Set false to skip the feed read entirely (single request, bare ticket, no feed data).'),
         response_format: TeamDynamixResponseFormatSchema,
       },
       annotations: { readOnlyHint: true, idempotentHint: true, destructiveHint: false, openWorldHint: false },
@@ -169,17 +174,20 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
     async ({
       app_id,
       ticket_id,
+      include_feed,
       response_format,
     }: {
       app_id: number;
       ticket_id: number;
+      include_feed?: boolean;
       response_format: ResponseFormat;
     }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
         // Combined read: ticket object with the feed attached as a `feed`
         // subfield (entries newest-first, per-entry replies expanded).
-        const ticket = await client.getTicketWithFeed(app_id, ticket_id);
+        // `include_feed: false` skips the second read entirely.
+        const ticket = await client.getTicketWithFeed(app_id, ticket_id, { includeFeed: include_feed });
         return {
           content: [{ type: 'text', text: render(ticket, response_format) }],
           structuredContent: ticket as Record<string, unknown>,

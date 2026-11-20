@@ -368,11 +368,17 @@ function registerTeamDynamixTicketsGateway(server: McpServer): void {
           }
           case 'get_ticket': {
             const parsed = parsePayload(
-              z.object({ app_id: TeamDynamixAppIdSchema, ticket_id: z.number().int().positive() }),
+              z.object({
+                app_id: TeamDynamixAppIdSchema,
+                ticket_id: z.number().int().positive(),
+                include_feed: z.boolean().optional().default(true),
+              }),
               payload,
               action,
             );
-            const ticket = await client.getTicketWithFeed(parsed.app_id, parsed.ticket_id);
+            const ticket = await client.getTicketWithFeed(parsed.app_id, parsed.ticket_id, {
+              includeFeed: parsed.include_feed,
+            });
             return toSuccessResponse(ticket, response_format);
           }
           case 'search_tickets': {

@@ -163,6 +163,15 @@ describe('UnifiedTeamDynamixClient', () => {
       expect(sdk.tickets.appIdTicketsIdFeed).toHaveBeenCalledWith({ params: { path: { appId: 42, id: 9001 } } });
     });
 
+    it('getTicketWithFeed with includeFeed:false skips the feed read entirely', async () => {
+      const ticket = (await client.getTicketWithFeed(42, 9001, { includeFeed: false })) as Record<string, unknown>;
+      expect(ticket).toMatchObject({ ID: 9001, Title: 'Test Ticket' });
+      expect(ticket).not.toHaveProperty('feed');
+      const sdk = await createMcpSdkClient(baseConfig);
+      expect(sdk.tickets.appIdTicketsId).toHaveBeenCalledTimes(1);
+      expect(sdk.tickets.appIdTicketsIdFeed).not.toHaveBeenCalled();
+    });
+
     describe('getTicketFeed inlines replies (issue #17)', () => {
       it('attaches Replies for entries with RepliesCount > 0', async () => {
         const sdk = await createMcpSdkClient(baseConfig);

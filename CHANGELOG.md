@@ -1,3 +1,9 @@
+## v0.5.8 - 2026-11-20
+
+- feat: `get_ticket` accepts `include_feed: false` to skip the feed read entirely — a single request returning the bare ticket with no `feed` key; default stays `include_feed: true` (parallel ticket + feed reads, feed as a subfield)
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.7...v0.5.8
+
 ## v0.5.7 - 2026-11-20
 
 - feat: `get_ticket` (both the standalone tool and the ticket gateway action) now returns the ticket with its feed attached as a `feed` subfield — ticket and feed reads are issued in parallel, so one agent request yields ticket + feed (entries newest-first, per-entry replies expanded and inlined) in one wall-time round trip; the standalone `get_ticket_feed` tool remains for feed-only reads

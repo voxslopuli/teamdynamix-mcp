@@ -105,13 +105,18 @@ export class UnifiedTeamDynamixClient {
    * One agent request: ticket + feed. The two API reads run in parallel and
    * the feed is attached as a `feed` subfield on the returned ticket object
    * (newest-first, replies expanded per entry, capped by repliesEntryLimit).
-   * Errors from either read propagate; no write occurs.
+   * With `includeFeed: false` the feed read is skipped entirely and the bare
+   * ticket is returned (single request, no `feed` key). Errors from either
+   * read propagate; no write occurs.
    */
   async getTicketWithFeed(
     appId: number,
     ticketId: number,
-    opts: { repliesEntryLimit?: number } = {},
+    opts: { includeFeed?: boolean; repliesEntryLimit?: number } = {},
   ): Promise<unknown> {
+    if (opts.includeFeed === false) {
+      return this.getTicket(appId, ticketId);
+    }
     const [ticket, feed] = await Promise.all([
       this.getTicket(appId, ticketId),
       this.getTicketFeed(appId, ticketId, opts),
