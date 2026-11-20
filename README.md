@@ -6,14 +6,23 @@ A TypeScript [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) se
 
 ## Features
 
-- **11 domain gateway tools** that route validated actions across discovery,
-  tickets, relationships, KB, assets, CMDB, people, services, projects,
-  time, and reference data
-- **Safe by default**: write, delete, and admin tools disabled until
-  explicitly opted in; destructive operations require `confirm: true`
+- **11 domain gateway tools** routing validated actions across discovery, tickets,
+  relationships, KB, assets, CMDB, people, services, projects, time, and reference data
+- **52 standalone tools** plus the gateways — including a combined `get_ticket` read
+  (ticket + feed inlined, `include_feed: false` opt-out) and SDK-backed people/KB searches
+- **Bulk tools**: `bulk_get_tickets` (parallel ticket+feed reads), `bulk_update_tickets`
+  (sequential writes under the write gate), `bulk_add_users_to_group` — all capped at 25
+  items with per-item error isolation
+- **Workspace watch tools**: a local hash-diff ledger over the tickets you manage —
+  diff passes, hidden-reply detection, ball-in-court inference, local-only notes,
+  optional scheduled sweeps (`tdx-watch-sweep` CLI + background triage)
+- **Safe by default**: write, delete, and admin tools disabled until opted in;
+  destructive operations require `confirm: true`; watch tools are read-only toward TDX
+- **Real coverage of the live API**: regenerated from the deployment OpenAPI spec
+  (578 routes verified per-deployment); SDK exposes every live route incl. POST
 - **Two auth modes**: standard (username/password) and admin (BEID/WebServicesKey)
-- **Covers 207 API endpoints** across all TeamDynamix domains, verified against the SDK route manifest
-- **Rate-limit aware**: SDK built-in retry with exponential backoff on 429 and 5xx responses
+- **Rate-limit aware**: SDK retry with exponential backoff on 429/5xx; runtime
+  validation fails open in the MCP (zod boundary validation), compile-safe SDK validator
 - **Zod-validated inputs**: schema enforcement before any API call
 - **Agent skill and prompt included**: ready-to-use skill definition for
   GitHub Copilot and compatible agents

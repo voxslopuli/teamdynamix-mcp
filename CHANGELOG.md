@@ -1,3 +1,11 @@
+## v0.5.10 - 2026-11-20
+
+- docs: full tool-catalog refresh — `docs/reference/tools.md` and the agent skill catalog now cover all 82 tools (11 gateways, 58 standalone, 7 watch, 3 bulk) including the combined `get_ticket` read, project `app_id` requirements, and surface corrections from #18–#23
+- docs: new `teamdynamix.catalog-drift.test.ts` — every registered tool name must appear in both catalogs, so the docs can no longer silently go stale with releases
+- README: corrected surface claims (was "207 endpoints"); Features section now reflects all v0.5.x additions
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.9...v0.5.10
+
 ## v0.5.9 - 2026-11-20
 
 - feat: bulk tools (capped at 25 items per call, per-item error isolation):
