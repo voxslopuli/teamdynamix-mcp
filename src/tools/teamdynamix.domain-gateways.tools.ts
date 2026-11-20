@@ -372,7 +372,7 @@ function registerTeamDynamixTicketsGateway(server: McpServer): void {
               payload,
               action,
             );
-            const ticket = await client.getTicket(parsed.app_id, parsed.ticket_id);
+            const ticket = await client.getTicketWithFeed(parsed.app_id, parsed.ticket_id);
             return toSuccessResponse(ticket, response_format);
           }
           case 'search_tickets': {

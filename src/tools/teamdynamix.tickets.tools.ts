@@ -157,7 +157,8 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
     `${TEAMDYNAMIX_TOOL_PREFIX}_get_ticket`,
     {
       title: 'Get Ticket',
-      description: 'Retrieves full details of a single TeamDynamix ticket by ID.',
+      description:
+        'Retrieves a single TeamDynamix ticket by ID with its feed attached as a `feed` subfield (entries newest-first, per-entry replies expanded and inlined).',
       inputSchema: {
         app_id: TeamDynamixAppIdSchema,
         ticket_id: z.number().int().positive().describe('Ticket ID.'),
@@ -176,7 +177,9 @@ export function registerTeamDynamixTicketTools(server: McpServer): void {
     }) => {
       try {
         const client = createConfiguredTeamDynamixClient();
-        const ticket = await client.getTicket(app_id, ticket_id);
+        // Combined read: ticket object with the feed attached as a `feed`
+        // subfield (entries newest-first, per-entry replies expanded).
+        const ticket = await client.getTicketWithFeed(app_id, ticket_id);
         return {
           content: [{ type: 'text', text: render(ticket, response_format) }],
           structuredContent: ticket as Record<string, unknown>,

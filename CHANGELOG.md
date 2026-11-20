@@ -1,3 +1,9 @@
+## v0.5.7 - 2026-11-20
+
+- feat: `get_ticket` (both the standalone tool and the ticket gateway action) now returns the ticket with its feed attached as a `feed` subfield — ticket and feed reads are issued in parallel, so one agent request yields ticket + feed (entries newest-first, per-entry replies expanded and inlined) in one wall-time round trip; the standalone `get_ticket_feed` tool remains for feed-only reads
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.6...v0.5.7
+
 ## v0.5.6 - 2026-11-20
 
 - fix: `search_tickets` and KB search returned empty results despite healthy HTTP calls — the client destructured a `{ data, error }` envelope from **generated domain methods**, which return the bare API payload, so `data` was always `undefined` and every search collapsed to `[]` (#23). Both now consume the domain result directly; transport/API errors already throw from the SDK, so the envelope check was dead code

@@ -101,6 +101,26 @@ export class UnifiedTeamDynamixClient {
   getTicket(appId: number, ticketId: number): Promise<unknown> {
     return this.sdk().then(s => s.tickets.appIdTicketsId({ params: { path: { appId, id: ticketId } } }));
   }
+  /**
+   * One agent request: ticket + feed. The two API reads run in parallel and
+   * the feed is attached as a `feed` subfield on the returned ticket object
+   * (newest-first, replies expanded per entry, capped by repliesEntryLimit).
+   * Errors from either read propagate; no write occurs.
+   */
+  async getTicketWithFeed(
+    appId: number,
+    ticketId: number,
+    opts: { repliesEntryLimit?: number } = {},
+  ): Promise<unknown> {
+    const [ticket, feed] = await Promise.all([
+      this.getTicket(appId, ticketId),
+      this.getTicketFeed(appId, ticketId, opts),
+    ]);
+    if (ticket && typeof ticket === 'object') {
+      return { ...(ticket as Record<string, unknown>), feed };
+    }
+    return { ticket, feed };
+  }
   searchTickets(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
       // Generated domain methods return the bare API payload — executeSdkRoute

@@ -153,6 +153,16 @@ describe('UnifiedTeamDynamixClient', () => {
       expect(ticket).toHaveProperty('Title', 'Test Ticket');
     });
 
+    it('getTicketWithFeed attaches the feed as a subfield and reads both in parallel', async () => {
+      const ticket = (await client.getTicketWithFeed(42, 9001)) as Record<string, unknown>;
+      expect(ticket).toMatchObject({ ID: 9001, Title: 'Test Ticket' });
+      expect(Array.isArray(ticket['feed'])).toBe(true);
+      const sdk = await createMcpSdkClient(baseConfig);
+      // Ticket and feed reads must NOT be sequenced — assert both were issued.
+      expect(sdk.tickets.appIdTicketsId).toHaveBeenCalledWith({ params: { path: { appId: 42, id: 9001 } } });
+      expect(sdk.tickets.appIdTicketsIdFeed).toHaveBeenCalledWith({ params: { path: { appId: 42, id: 9001 } } });
+    });
+
     describe('getTicketFeed inlines replies (issue #17)', () => {
       it('attaches Replies for entries with RepliesCount > 0', async () => {
         const sdk = await createMcpSdkClient(baseConfig);
