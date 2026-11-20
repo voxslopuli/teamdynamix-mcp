@@ -115,11 +115,19 @@ export class UnifiedTeamDynamixClient {
       // applied server-side on queue searches, so filter client-side.
       const groupFilter = parseIdListEnv(process.env['TEAMDYNAMIX_TICKET_GROUP_IDS']);
       if (groupFilter.length === 0) return results;
-      return results.filter(item => {
+      const filtered = results.filter(item => {
         if (typeof item !== 'object' || item === null) return false;
         const gid = Number((item as Record<string, unknown>)['ResponsibleGroupID']);
         return groupFilter.includes(gid);
       });
+      // The env restriction is silent by design, but hiding the count hides the
+      // cause of "search always returns zero rows" (#22) — surface it on stderr.
+      if (filtered.length < results.length) {
+        console.error(
+          `[teamdynamix-mcp] TEAMDYNAMIX_TICKET_GROUP_IDS=${groupFilter.join(',')} filtered ${results.length - filtered.length} of ${results.length} rows for app ${appId}`,
+        );
+      }
+      return filtered;
     });
   }
   listTicketTypes(appId: number): Promise<readonly unknown[]> {

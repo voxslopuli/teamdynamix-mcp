@@ -96,8 +96,13 @@ function buildSdkConfig(
     environment: config.baseUrl?.includes('sandbox') ? 'sandbox' : 'production',
     baseUrl: config.baseUrl,
     timeoutMs: config.timeoutMs,
-    runtimeValidationMode: 'fail-open',
     ...(resolveSdkSpecPath() ? { specPath: resolveSdkSpecPath() as string } : {}),
+    // The MCP validates its own tool inputs at the boundary (zod schemas); the
+    // live API's published schemas don't consistently match its real responses
+    // (required-field drift, duplicate enum aliases), so OpenAPI runtime
+    // validation runs open here — hard validation against the doc would reject
+    // legitimate responses (issue #22 symptom 2).
+    runtimeValidationMode: 'fail-open',
     retryPolicy: {
       maxRetries: config.maxRetries,
     },

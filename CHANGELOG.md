@@ -1,3 +1,10 @@
+## v0.5.5 - 2026-11-20
+
+- fix: on SDK `@voxslopuli/teamdynamix-ts@0.3.2` — the live API's published `FeedItemType` enum contains duplicate alias values ("Ticket Task" and "Maintenance Activity" both 25, "Project"/"Project Request" both 1), which made Ajv refuse to compile the feed-route response schema and fail every `get_ticket_feed` call under runtime validation (#22 symptom 1); the spec sanitizer now deduplicates enum value arrays, and the validator treats schemas it cannot compile as skip-with-warning instead of throwing per call
+- fix: verified the path-prefix base URL hypothesis from #22 (symptom 2) is NOT the cause — the SDK joins path-prefixed base URLs correctly (regression test with a `https://host/TDWebApi`-style base); the remaining silent-zero mechanism is the `TEAMDYNAMIX_TICKET_GROUP_IDS` client-side row filter, which now reports filtered-out counts on stderr when it removes any rows
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.4...v0.5.5
+
 ## v0.5.4 - 2026-11-19
 
 - fix: `teamdynamix_watch_notes op:list` returned a bare array as `structuredContent`, which MCP clients reject against the tool-result record schema (#21); the list is now wrapped as `{ notes: [...] }` with a schema-shape regression test
