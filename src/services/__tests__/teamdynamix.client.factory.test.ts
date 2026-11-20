@@ -19,7 +19,7 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
     },
     tickets: {
       appIdTicketsId: vi.fn().mockResolvedValue({ ID: 9001, Title: 'Test Ticket' }),
-      appIdTicketsSearch: vi.fn().mockResolvedValue({ data: [{ ID: 7 }], error: undefined }),
+      appIdTicketsSearch: vi.fn().mockResolvedValue([{ ID: 7 }]),
       appIdTicketsTypes: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Incident' }]),
       appIdTicketsPriorities: vi.fn().mockResolvedValue([{ ID: 1, Name: 'High' }]),
       appIdTicketsUrgencies: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Urgent' }]),
@@ -222,7 +222,7 @@ describe('UnifiedTeamDynamixClient', () => {
     it('searchTickets sends the search body to the search endpoint (issue #16)', async () => {
       const sdk = await createMcpSdkClient(baseConfig);
       const searchMock = sdk.tickets.appIdTicketsSearch as unknown as ReturnType<typeof vi.fn>;
-      searchMock.mockResolvedValue({ data: [{ ID: 7 }], error: undefined });
+      searchMock.mockResolvedValue([{ ID: 7 }]);
 
       const tickets = await client.searchTickets(42, {
         MaxResults: 50,

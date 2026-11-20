@@ -8,11 +8,14 @@ vi.mock('../../client/sdk-client.factory.js', () => ({
     GET: vi.fn().mockResolvedValue({ data: null, error: undefined }),
     POST: vi.fn().mockResolvedValue({ data: [], error: undefined }),
     people: {
-      peopleSearch: vi.fn().mockResolvedValue({ data: [{ UID: 'abc', FullName: 'Alice' }], error: undefined }),
+      peopleSearch: vi.fn().mockResolvedValue([{ UID: 'abc', FullName: 'Alice' }]),
       searchGroups: vi.fn().mockResolvedValue([{ ID: 1, Name: 'Group' }]),
     },
+    tickets: {
+      appIdTicketsSearch: vi.fn().mockResolvedValue([{ ID: 42, Title: 'VPN down' }]),
+    },
     knowledgeBase: {
-      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue({ data: [{ ID: 55 }], error: undefined }),
+      appIdKnowledgebaseSearch: vi.fn().mockResolvedValue([{ ID: 55 }]),
       appIdKnowledgebaseCategories: vi.fn().mockResolvedValue([]),
     },
   }),
@@ -107,13 +110,38 @@ describe('gateway search correctness (#18 and related)', () => {
       expect(arg.body).not.toHaveProperty('MaxResults');
     });
 
-    it('throws a clear error when the search route returns an error', async () => {
+    it('errors surface as thrown SDK transport errors, not empty arrays (domain client contract)', async () => {
+      // Domain methods have no { data, error } envelope: transport/API errors
+      // are thrown by executeSdkRoute itself (tested in the SDK suite). The
+      // MCP factory therefore has no dead error check to exercise here — any
+      // thrown TeamDynamixClientError propagates to the tool error path.
       const sdk = await createMcpSdkClient(baseConfig);
-      vi.mocked(sdk.knowledgeBase.appIdKnowledgebaseSearch).mockResolvedValueOnce({
-        data: null,
-        error: { message: 'denied' },
-      } as never);
-      await expect(client.searchKbArticles(42, { SearchText: 'vpn' })).rejects.toThrow(/KB search/i);
+      vi.mocked(sdk.knowledgeBase.appIdKnowledgebaseSearch).mockRejectedValueOnce(new Error('denied'));
+      await expect(client.searchKbArticles(42, { SearchText: 'vpn' })).rejects.toThrow(/denied/);
+    });
+
+    it('returns the domain payload verbatim — non-empty rows when the API returns tickets (#23)', async () => {
+      const articles = await client.searchKbArticles(42, { SearchText: 'vpn' });
+      expect(articles).toEqual([{ ID: 55 }]);
+    });
+  });
+
+  describe('searchTickets returns domain payloads, not envelope-destructured undefined (#23)', () => {
+    it('returns non-empty rows when the API returns tickets', async () => {
+      const tickets = (await client.searchTickets(7, {})) as readonly unknown[];
+      expect(tickets).toEqual([{ ID: 42, Title: 'VPN down' }]);
+    });
+
+    it('returns rows even when the domain result is a bare array (no envelope destructure)', async () => {
+      const sdk = await createMcpSdkClient(baseConfig);
+      vi.mocked(sdk.tickets.appIdTicketsSearch).mockResolvedValueOnce([{ ID: 99 }]);
+      const tickets = (await client.searchTickets(7, { StatusIDs: [394] })) as readonly unknown[];
+      expect(tickets).toEqual([{ ID: 99 }]);
+      const lastCall = vi.mocked(sdk.tickets.appIdTicketsSearch).mock.lastCall as unknown as [
+        { params: { path: { appId: number } }; body: Record<string, unknown> },
+      ];
+      expect(lastCall?.[0]?.params?.path?.appId).toBe(7);
+      expect(lastCall?.[0]?.body).toEqual({ StatusIDs: [394] });
     });
   });
 });

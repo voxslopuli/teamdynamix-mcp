@@ -1,3 +1,10 @@
+## v0.5.6 - 2026-11-20
+
+- fix: `search_tickets` and KB search returned empty results despite healthy HTTP calls — the client destructured a `{ data, error }` envelope from **generated domain methods**, which return the bare API payload, so `data` was always `undefined` and every search collapsed to `[]` (#23). Both now consume the domain result directly; transport/API errors already throw from the SDK, so the envelope check was dead code
+- test: regression pins non-empty search results when the API returns tickets, and the SDK-surface contract test now also covers `searchTickets`/KB search result shapes (mocks were mirroring the wrong envelope, which is why the suite stayed green on 0.5.5)
+
+**Full Changelog**: https://github.com/voxslopuli/teamdynamix-mcp/compare/v0.5.5...v0.5.6
+
 ## v0.5.5 - 2026-11-20
 
 - fix: on SDK `@voxslopuli/teamdynamix-ts@0.3.2` — the live API's published `FeedItemType` enum contains duplicate alias values ("Ticket Task" and "Maintenance Activity" both 25, "Project"/"Project Request" both 1), which made Ajv refuse to compile the feed-route response schema and fail every `get_ticket_feed` call under runtime validation (#22 symptom 1); the spec sanitizer now deduplicates enum value arrays, and the validator treats schemas it cannot compile as skip-with-warning instead of throwing per call

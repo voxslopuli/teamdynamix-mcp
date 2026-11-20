@@ -103,14 +103,15 @@ export class UnifiedTeamDynamixClient {
   }
   searchTickets(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
-      const { data, error } = (await s.tickets.appIdTicketsSearch({
+      // Generated domain methods return the bare API payload — executeSdkRoute
+      // throws on transport/API errors itself. The { data, error } envelope
+      // exists only on the raw openapi-fetch client; destructuring an envelope
+      // from a domain result is always undefined (#22/#23).
+      const payload = (await s.tickets.appIdTicketsSearch({
         params: { path: { appId } },
         body: mapTicketSearchBody(body),
-      })) as { data: unknown; error: unknown };
-      if (error) {
-        throw new Error(`Ticket search failed: ${JSON.stringify(error)}`);
-      }
-      const results = Array.isArray(data) ? data : [];
+      })) as unknown;
+      const results = Array.isArray(payload) ? payload : [];
       // Global team restriction (TEAMDYNAMIX_TICKET_GROUP_IDS): GroupIDs is not
       // applied server-side on queue searches, so filter client-side.
       const groupFilter = parseIdListEnv(process.env['TEAMDYNAMIX_TICKET_GROUP_IDS']);
@@ -273,14 +274,12 @@ export class UnifiedTeamDynamixClient {
   }
   searchKbArticles(appId: number, body: Record<string, unknown>): Promise<readonly unknown[]> {
     return this.sdk().then(async s => {
-      const { data, error } = (await s.knowledgeBase.appIdKnowledgebaseSearch({
+      // Domain result is the bare article array; see searchTickets note.
+      const payload = (await s.knowledgeBase.appIdKnowledgebaseSearch({
         params: { path: { appId } },
         body: sanitizeTo(body, ARTICLE_SEARCH_KEYS),
-      })) as { data: unknown; error: unknown };
-      if (error) {
-        throw new Error(`KB search failed: ${JSON.stringify(error)}`);
-      }
-      return Array.isArray(data) ? data : [];
+      })) as unknown;
+      return Array.isArray(payload) ? payload : [];
     });
   }
   listKbCategories(appId: number): Promise<readonly unknown[]> {
